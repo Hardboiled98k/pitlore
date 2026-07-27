@@ -18,8 +18,9 @@ PitLore 已形成三层可运行工程基线：本地 Lesson 闭环、Git-first 
 
 “工程基线可运行”仍不等于真实采用或生产就绪：当前没有 npm 发布或独立社区使用，
 也没有公网托管、真实 IdP/browser E2E、真实支付和生产运维证据。GitHub 源码仓库已从
-受审计的工程基线做 clean import 并公开；此前包含个人作者 metadata 的开发历史保留在
-private archive，不属于公共 Git 历史。公开仓库本身不能冒充社区采用。
+受审计的工程基线做 clean import 并公开；无凭据临时 consumer 已按 README 从公开
+GitHub URL 安装、锁定和重放成功，但这仍是维护者验收，不能冒充社区采用。此前包含
+个人作者 metadata 的开发历史保留在 private archive，不属于公共 Git 历史。
 
 ## 实时快照
 
@@ -27,17 +28,17 @@ private archive，不属于公共 Git 历史。公开仓库本身不能冒充社
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | 产品             | PitLore `0.1.0`；Apache-2.0；Node.js 22+ / TypeScript；consumer CI 已配置覆盖 Node.js 22/24 LTS                         |
 | 仓库             | `Hardboiled98k/pitlore`，public；默认分支 `main`                                                                         |
-| 当前工程基线     | clean public import；包含 public discovery facets v1、migration `009` 与完整开源文档                                   |
-| CI 见证          | 公开 `main@9a1849b` 的 CI、CodeQL 全绿；当前安装链路变更仍需以提交后的 Actions 结果复核                                  |
-| 工作树           | 公共历史从 GitHub noreply clean import 开始；当前本地增加 Git/tarball consumer 安装门禁，旧开发历史只保留在 private archive |
+| 当前工程基线     | `f9f2255` 受验安装代码基线；包含 public discovery facets v1、migration `009`、完整开源文档与跨平台安装门禁                |
+| CI 见证          | 公开 `f9f2255`：CI run `30258395895`、CodeQL run `30258395521` 全绿；13 个 check-run 均为 0 annotations                  |
+| 工作树           | 公共历史从 GitHub noreply clean import 开始；本地与公开 `main` 同步，旧开发历史只保留在 private archive                  |
 | 完整验证         | 当前工作树 `npm run verify`：43 files / **376 tests**，typecheck 和 build 通过                                         |
 | 自托管           | 真 PostgreSQL 17：`001`–`008` 历史 release → `009` → CLI reindex/幂等复跑/runtime 拒绝，以及 fresh restore/restart 全通过 |
 | 分页性能探针     | synthetic 100k releases：PostgreSQL keyset 取 101 行 lookahead，index 扫描约 102 行，约 0.57 ms；只是工程证据           |
-| Demo / 发布包    | tenant Demo 通过；tarball `--ignore-scripts`、普通 npm exec/全局安装与隔离 Git dependency smoke 均通过；约 0.52 MB / 2.53 MB / 242 files |
+| Demo / 发布包    | tenant Demo 通过；tarball、npm exec/全局安装、隔离 Git smoke 及无凭据公开 GitHub URL 安装/lock 重放均通过；约 0.52 MB / 2.53 MB / 242 files |
 | npm 发布自动化   | 仅手动 tag-ref workflow 已实现同一 artifact/SHA/六组合 consumer/OIDC 门禁；尚未运行，npm 包名、environment 与 trusted publisher 仍待维护者配置 |
 | 仓库保护         | live `main` 禁止 force-push/delete，但 required checks/reviews、admin enforcement、signatures 均未启用且 ruleset 为空；社区协作前仍需配置 |
 | 依赖审计         | production tree = 0；high/critical gate 通过；286 个 lock artifact 均为 npm 官方 registry；MCP bundle notice 正文有 SHA-256 门禁；audit 汇总的 2 个 dev-only Hono moderate 已在所装 1.19.17 修复，且 adapter 不进入 MCP bundle |
-| 本地 lore        | 当前 113 条：60 approved，53 candidate；29 条有 current advisory，24 条未 advisory review；均未由 agent 批准           |
+| 本地 lore        | 当前 114 条：60 approved，54 candidate；29 条有 current advisory，25 条未 advisory review；均未由 agent 批准           |
 | Evidence current | `catalog_hash=637418aa…`；0 events；usefulness/precision/recall 均为 unknown (`null`)                                   |
 | Evidence all     | 跨 2 个 catalog 共 8 条 real；retrieve 5，useful 2，precision 2/7，recall 2/3；detector 3 条全为历史 FP                 |
 | PitLore check    | semantic diff、discovery 与本轮安装、发行及社区入口 source/config 定向扫描均为 0 findings；本轮 hash `637418aa…`，未写 agent 自评 evidence |
@@ -183,6 +184,8 @@ private archive，不属于公共 Git 历史。公开仓库本身不能冒充社
 npm run verify                 # 43 files / 376 tests + typecheck + build
 npm run demo:tenant            # passed
 npm run test:install           # passed; tarball + isolated Git dependency consumer smokes
+npm install --save-dev "git+https://github.com/Hardboiled98k/pitlore.git#main"
+                               # passed in no-credential temp HOME; lock replay also passed
 npm run test:self-host         # passed; 008→009 reindex + fresh restore/restart on PostgreSQL 17
 npm run audit:prod             # 0 vulnerabilities
 npm run audit:build            # 2 moderate dev-only Hono findings; no high/critical
@@ -193,7 +196,7 @@ actionlint                     # passed
 shellcheck -e SC2016 ...       # passed
 git diff --check               # passed
 gitleaks dir . --redact        # no leaks
-pitlore check <changed sources> # 22 个安装/发行 source/config 定向扫描 0 findings
+pitlore check <changed sources> # 安装/发行 source/config 定向扫描 0 findings
 ```
 
 ## 状态维护规则
