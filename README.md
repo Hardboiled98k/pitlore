@@ -561,7 +561,7 @@ npm run test:install
 npm run test:self-host
 ```
 
-At this local engineering snapshot, `npm test` covers 376 automated tests. The separate
+At this local engineering snapshot, `npm test` covers 377 automated tests. The separate
 self-host smoke exercises fresh install, upgrade, least-privilege runtime access,
 backup/restore, and restart across all nine migrations; these checks are not evidence of
 a production-hosted service or real external-provider operation.

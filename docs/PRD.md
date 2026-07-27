@@ -526,7 +526,7 @@ role。public read、browser auth、billing webhook、protected API auth 和 rel
 - LLM 蒸馏：用 **固定 fixture + schema 校验**；对模型输出做结构断言，不做全文金句快照。
 - 金丝雀坏代码样本：`fixtures/bad/*` vs `fixtures/good/*` 保证 detector/check 稳定。
 
-**当前工程快照（2026-07-27）：** `npm test` 为 376 项自动化测试；独立
+**当前工程快照（2026-07-28）：** `npm test` 为 377 项自动化测试；独立
 `npm run test:self-host` 覆盖 9 个 migration 的 fresh/upgrade、least-privilege、
 backup/restore 和 restart；发行 CI 已配置为让 Ubuntu、macOS、Windows consumer 安装
 同一 npm tarball，并单独验证 Git dependency 构建，提交后的 public Actions 仍需复核。
