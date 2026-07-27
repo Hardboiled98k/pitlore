@@ -358,7 +358,7 @@ pitlore path
 | 本地索引  | Phase 1 直接读 YAML 文件；规模验证后再评估 SQLite/embedding                                          |
 | Team 服务 | Phase 1 不依赖服务；当前已有 Phase 3 Node/PostgreSQL 自托管 baseline；托管 SaaS/对象存储仍待真实需求 |
 | LLM       | GPT-5.6 / 用户配置的 API（蒸馏与检索重排）                                                           |
-| 打包      | Git/npm tarball；npm 包名 `pitlore` 尚未发布；Docker 发布 registry                                  |
+| 打包      | Git/npm tarball；`pitlore@0.1.1` 已发布到 npm；Docker 发布 registry                                 |
 
 ### 6.10 公开开源开发方向
 
@@ -469,15 +469,15 @@ Fork / PR 改进某条 lesson
 **产品质量信号（不阻塞开源/开发）：** Phase 1 核心闭环被真实团队验证，
 candidate 人工接受率和 detector precision 达到目标。
 
-**工程状态（2026-07-27）：** public export、Git/local install（含 Git `--subdir`）、
+**工程状态（2026-07-28）：** public export、Git/local install（含 Git `--subdir`）、
 deterministic lock、checksum/cache、SemVer dependency、Ed25519 trust、3 个官方 Pack，
 以及单 artifact/完整 air-gap dependency bundle 已实现。public Pack 必须携带非空 UTF-8
 `LICENSE`；校验器在解析 YAML 前先执行文件数、单文件、总大小预算，并拒绝中间路径或
 最终目标的 symlink/realpath 越界。npm tarball 已包含可独立运行的 bundled MCP stdio
 runtime，并有真实 tarball 安装 smoke；Git dependency 通过 `prepare` 从源码生成
-`dist`，隔离 consumer 会验证真实 bin/version/help。GitHub 源码仓库已通过 clean import
-公开，但 npm 尚未发布，独立社区安装、贡献和采用也未发生。这些外部事实必须如实
-披露，但不阻塞继续开源开发。
+`dist`，隔离 consumer 会验证真实 bin/version/help。GitHub 源码仓库、npm `0.1.1`
+和对应 GitHub Release 已公开，但独立社区安装、贡献和采用尚无证据。这些外部事实
+必须如实披露，但不阻塞继续开源开发。
 
 ### 8.3 Phase 3：网站进化
 
@@ -608,7 +608,8 @@ backup/restore 和 restart；发行 CI 已配置为让 Ubuntu、macOS、Windows 
 1. ~~品牌最终名~~ → **暂定 PitLore**；是否永久采用待验证后再定。
 2. 本地真相源：纯 Git 是否足够，还是 MVP 就上 SQLite index？
 3. 蒸馏输入默认接受「脱敏 diff」还是「纯自然语言描述」优先？
-4. 首个 npm 版本与 GitHub Release 何时发布，以及后续稳定版本节奏如何定义？
+4. ~~首个 npm 版本与 GitHub Release 何时发布~~ → **`v0.1.1` 已于 2026-07-28
+   发布**；后续稳定版本节奏继续由真实修复、采用反馈和工程门禁决定。
 
 ---
 

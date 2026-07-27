@@ -24,7 +24,7 @@ for the distributed CLI package; Lesson and Pack schema versions have their own 
   remains publicly visible and immutable after its final npm dry-run exposed the path
   bug, but it has no GitHub Release and no corresponding npm version.
 
-## [0.1.0] - 2026-07-27
+## [0.1.0] - 2026-07-28
 
 ### Changed
 
