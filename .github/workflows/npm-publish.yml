@@ -58,7 +58,7 @@ jobs:
           PITLORE_RELEASE_TAG: ${{ steps.release.outputs.tag }}
           PITLORE_RELEASE_VERSION: ${{ steps.release.outputs.version }}
         run: node scripts/verify-release-artifact.mjs
-      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: pitlore-npm-release
           path: package-artifact/*.tgz
@@ -118,7 +118,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           package-manager-cache: false
-      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         with:
           name: pitlore-npm-release
           path: package-artifact
@@ -155,7 +155,7 @@ jobs:
         run: |
           npm install --global npm@11.18.0 --ignore-scripts --no-audit --no-fund --registry=https://registry.npmjs.org
           test "$(npm --version)" = "11.18.0"
-      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         with:
           name: pitlore-npm-release
           path: package-artifact
@@ -213,7 +213,7 @@ jobs:
         run: |
           npm install --global npm@11.18.0 --ignore-scripts --no-audit --no-fund --registry=https://registry.npmjs.org
           test "$(npm --version)" = "11.18.0"
-      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
         with:
           name: pitlore-npm-release
           path: package-artifact

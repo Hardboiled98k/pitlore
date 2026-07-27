@@ -496,28 +496,35 @@ try {
       ? path.join(globalRoot, "node_modules", "pitlore")
       : path.join(globalRoot, "lib", "node_modules", "pitlore");
   const globalCliEntry = path.join(globalInstalledRoot, "dist", "cli.js");
-  const globalBinary =
-    process.platform === "win32"
-      ? path.join(globalRoot, "pitlore.cmd")
-      : path.join(globalRoot, "bin", "pitlore");
-  const globalVersion =
-    process.platform === "win32"
-      ? execFileSync(
-          process.env.ComSpec ?? "cmd.exe",
-          ["/d", "/s", "/c", `"${globalBinary}" --version`],
-          {
-            cwd: consumerRoot,
-            encoding: "utf8",
-          },
-        )
-      : execFileSync(globalBinary, ["--version"], {
-          cwd: consumerRoot,
-          encoding: "utf8",
-        });
+  const globalBinRoot =
+    process.platform === "win32" ? globalRoot : path.join(globalRoot, "bin");
+  const globalBinary = path.join(
+    globalBinRoot,
+    process.platform === "win32" ? "pitlore.cmd" : "pitlore",
+  );
+  const environmentPathKey =
+    Object.keys(process.env).find((key) => key.toLowerCase() === "path") ??
+    "PATH";
+  const inheritedPath = process.env[environmentPathKey] ?? "";
   fs.writeFileSync(
     path.join(npxRoot, "package.json"),
-    JSON.stringify({ private: true }),
+    JSON.stringify({
+      private: true,
+      scripts: { "pitlore-global-version": "pitlore --version" },
+    }),
     "utf8",
+  );
+  const globalVersion = runNpm(
+    ["run", "--silent", "pitlore-global-version"],
+    {
+      cwd: npxRoot,
+      encoding: "utf8",
+      env: {
+        [environmentPathKey]: inheritedPath
+          ? `${globalBinRoot}${path.delimiter}${inheritedPath}`
+          : globalBinRoot,
+      },
+    },
   );
   const npxVersion = runNpm(
     [

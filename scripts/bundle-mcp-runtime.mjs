@@ -149,6 +149,7 @@ for (const [
   const nextHeading = notices.indexOf("\n## ", contentStart);
   const content = notices
     .slice(contentStart, nextHeading === -1 ? undefined : nextHeading)
+    .replace(/\r\n?/gu, "\n")
     .trim();
   const actualNoticeSha256 = crypto
     .createHash("sha256")

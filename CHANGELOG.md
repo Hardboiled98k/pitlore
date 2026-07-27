@@ -9,6 +9,9 @@ for the distributed CLI package; Lesson and Pack schema versions have their own 
 
 - Require Node.js 22+; consumer CI is configured to exercise the Node.js 22 and
   24 LTS lines before release.
+- Normalize reviewed notice text across LF and CRLF checkouts, execute global npm
+  shims through a static consumer script, and use artifact actions with a supported
+  runner runtime so the release gate is portable across Windows, macOS, and Linux.
 
 ### Added
 
