@@ -16,33 +16,33 @@ PitLore 已形成三层可运行工程基线：本地 Lesson 闭环、Git-first 
 独立用户安装、跨真实任务重复使用和 current-catalog 人工 evidence 作为长期产品质量
 信号持续记录，不阻塞源码开源、日常开发或版本推进；人审和 evidence 完整性边界不变。
 
-“工程基线可运行”仍不等于真实采用或生产就绪：当前没有 npm 发布或独立社区使用，
-也没有公网托管、真实 IdP/browser E2E、真实支付和生产运维证据。GitHub 源码仓库已从
-受审计的工程基线做 clean import 并公开；无凭据临时 consumer 已按 README 从公开
-GitHub URL 安装、锁定和重放成功，但这仍是维护者验收，不能冒充社区采用。此前包含
+“工程基线可运行”仍不等于真实采用或生产就绪：npm `0.1.1` 和对应 GitHub Release
+已经公开，但尚无独立社区使用，也没有公网托管、真实 IdP/browser E2E、真实支付和
+生产运维证据。无凭据临时 consumer 已从 npm 官方 registry 和公开 GitHub URL 分别
+安装并完成 CLI/MCP smoke，但这仍是维护者控制的验收，不能冒充社区采用。此前包含
 个人作者 metadata 的开发历史保留在 private archive，不属于公共 Git 历史。
 
 ## 实时快照
 
 | 字段             | 2026-07-28 本地已核验值                                                                                                 |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| 产品             | PitLore `0.1.1` release candidate；Apache-2.0；Node.js 22+ / TypeScript；consumer CI 已配置覆盖 Node.js 22/24 LTS       |
+| 产品             | PitLore `0.1.1` 首个公开 npm/GitHub Release；Apache-2.0；Node.js 22+ / TypeScript；consumer CI 覆盖 Node.js 22/24 LTS |
 | 仓库             | `Hardboiled98k/pitlore`，public；默认分支 `main`                                                                         |
-| 当前工程基线     | `a77641c` 发布治理基线；包含 public discovery facets v1、migration `009`、完整开源文档、跨平台安装门禁与社区治理配置       |
-| CI 见证          | 公开 `a77641c`：CI run `30283470012`（11/11 jobs）、CodeQL run `30283469002`（3/3）全绿；14/14 check-runs success、0 annotations |
+| 当前发行基线     | `v0.1.1` → `efb3eb0ef723f3eac31fbbfdcac05419898811e4`；包含 public discovery facets v1、migration `009`、跨平台安装门禁与社区治理配置 |
+| CI 见证          | 公开 `efb3eb0`：CI run `30285880716`（11/11 jobs）、CodeQL run `30285880024`（3/3）全绿；14/14 check-runs success、0 annotations |
 | 工作树           | 公共历史从 GitHub noreply clean import 开始；本地与公开 `main` 同步，旧开发历史只保留在 private archive                  |
 | 完整验证         | 当前工作树 `npm run verify`：44 files / **377 tests**，typecheck 和 build 通过                                         |
 | 自托管           | 真 PostgreSQL 17：`001`–`008` 历史 release → `009` → CLI reindex/幂等复跑/runtime 拒绝，以及 fresh restore/restart 全通过 |
 | 分页性能探针     | synthetic 100k releases：PostgreSQL keyset 取 101 行 lookahead，index 扫描约 102 行，约 0.57 ms；只是工程证据           |
-| Demo / 发布包    | tenant Demo 通过；tarball、npm exec/全局安装、隔离 Git smoke 及无凭据公开 GitHub URL 安装/lock 重放均通过；约 0.53 MB / 2.73 MB / 243 files |
-| npm 发布自动化   | `v0.1.0` run `30284388572` 的 source/self-host/六组合 consumer 全通过，最终 npm dry-run 因相对 tarball 被 npm 11 误解为 Git shorthand 而失败；公开 tag 保持不可变，但没有 GitHub Release 或对应 npm 版本；修复后的首发候选为 `v0.1.1` |
+| Demo / 发布包    | tenant Demo 通过；tarball、npm exec/全局安装、隔离 Git smoke、无凭据 GitHub 安装/lock 重放及全新匿名 npm registry CLI/MCP 安装均通过；约 0.53 MB / 2.73 MB / 243 files |
+| npm / GitHub 发布 | `v0.1.1` dry-run [`30286365114`](https://github.com/Hardboiled98k/pitlore/actions/runs/30286365114) 全门禁通过；exact artifact SHA-256 `abe3e6fc9a55198d519ba93040b81676d21498f8c53011e77d418120d1f9df16` 已发布为 [`pitlore@0.1.1`](https://www.npmjs.com/package/pitlore/v/0.1.1) 并附到 [GitHub Release](https://github.com/Hardboiled98k/pitlore/releases/tag/v0.1.1)，三处字节一致；首次账号级 2FA bootstrap 无 OIDC provenance，后续发布者已精确绑定 repo/workflow/environment |
 | 仓库保护         | live `main` 禁止 force-push/delete，要求 GitHub Actions `CI required`、PR stale-review dismiss 与 conversation resolution；单维护者审批数为 0，admin 保留紧急绕过；active `v*` tag ruleset 禁止已创建标签更新或删除 |
 | 开源治理         | GitHub community profile = 100%；CODEOWNERS、Contributor Covenant 2.1、结构化 issue forms、PR template 和 Dependabot 已启用；行为准则如实披露单维护者无独立申诉方边界 |
 | 依赖审计         | production tree = 0；high/critical gate 通过；286 个 lock artifact 均为 npm 官方 registry；MCP bundle notice 正文有 SHA-256 门禁；audit 汇总的 2 个 dev-only Hono moderate 已在所装 1.19.17 修复，且 adapter 不进入 MCP bundle |
 | 本地 lore        | 当前 115 条：60 approved，55 candidate；29 条有 current advisory，26 条未 advisory review；均未由 agent 批准           |
 | Evidence current | `catalog_hash=637418aa…`；0 events；usefulness/precision/recall 均为 unknown (`null`)                                   |
 | Evidence all     | 跨 2 个 catalog 共 8 条 real；retrieve 5，useful 2，precision 2/7，recall 2/3；detector 3 条全为历史 FP                 |
-| PitLore check    | semantic diff、discovery 与本轮安装、发行及社区入口 source/config 定向扫描均为 0 findings；本轮 hash `637418aa…`，未写 agent 自评 evidence |
+| PitLore check    | semantic diff、discovery 与安装/发行/社区入口 source/config 定向扫描均为 0 findings；本轮发行文档 retrieve/check 的 observed hash 为 `84695ccb…`，未写 agent 自评 evidence |
 
 ## 新会话恢复顺序
 
@@ -110,13 +110,18 @@ GitHub URL 安装、锁定和重放成功，但这仍是维护者验收，不能
   获得 OIDC 权限。GitHub `npm-publish` environment 已仅允许 `v*` tag；active tag ruleset
   会阻止已创建的 `v*` 标签更新或删除。`v0.1.0` 演练已真实运行：除最后的 npm
   dry-run 路径解析外均通过；该 tag 公开可见且保持不可变，但没有 GitHub Release 或
-  对应 npm 版本，修复使用新 patch version。npm trusted publisher 必须等首次包由账号
-  2FA bootstrap 后配置。
+  对应 npm 版本，修复使用新 patch version。
+- `v0.1.1` tag-bound 演练跨 Ubuntu/macOS/Windows × Node.js 22/24 全通过；同一
+  SHA-256 固定 tarball 经账号级 2FA 交互 bootstrap 到 npm，并作为 GitHub Release
+  asset 固化。首次版本没有 trusted-publishing provenance。
+- npm trusted publisher 已精确绑定 `Hardboiled98k/pitlore`、`npm-publish.yml` 和
+  `npm-publish` environment，allowed action 仅为 publish；本机 bootstrap 登录已退出。
+  此配置的真实 OIDC 能力仍须由下一版本的成功 publish job 证明。
 
 ### 仍缺真实采用
 
-- npm 包未发布，公开仓尚无独立社区用户的安装、贡献、升级、yank 响应或误报反馈；
-  仓库公开本身不计为采用证据。
+- npm 包和 GitHub Release 已公开，但尚无独立社区用户的安装、贡献、升级、yank
+  响应或误报反馈；仓库、包与 Release 公开本身不计为采用证据。
 - 官方 Pack 未用真实发布者 key 签名；代码中的签名能力不等于发布者治理
   已成立。
 
@@ -186,7 +191,7 @@ GitHub URL 安装、锁定和重放成功，但这仍是维护者验收，不能
 ## 当前验证命令
 
 ```text
-npm run verify                 # 43 files / 376 tests + typecheck + build
+npm run verify                 # 44 files / 377 tests + typecheck + build
 npm run demo:tenant            # passed
 npm run test:install           # passed; tarball + isolated Git dependency consumer smokes
 npm install --save-dev "git+https://github.com/Hardboiled98k/pitlore.git#main"
@@ -196,6 +201,11 @@ npm run audit:prod             # 0 vulnerabilities
 npm run audit:build            # 2 moderate dev-only Hono findings; no high/critical
 npm pack --dry-run --json      # runs prepare; inspect current size/file list (currently 243 files)
 npm publish --dry-run --json   # passed; lifecycle/install gates execute, registry unchanged
+npm view pitlore@0.1.1 version --registry=https://registry.npmjs.org
+                               # 0.1.1
+npm install --global pitlore@0.1.1
+npx --yes pitlore@0.1.1 --version
+                               # anonymous isolated CLI/MCP consumer smoke passed
 docker compose config --quiet  # passed
 actionlint                     # passed
 shellcheck -e SC2016 ...       # passed

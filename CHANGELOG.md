@@ -14,7 +14,13 @@ for the distributed CLI package; Lesson and Pack schema versions have their own 
 
 ### Release
 
-- Use `0.1.1` for the first npm publication. The protected `v0.1.0` engineering tag
+- Published `pitlore@0.1.1` to the official npm registry from the exact tarball validated
+  by the protected-tag release workflow and attached the same bytes plus `SHA256SUMS` to
+  the GitHub Release.
+- The first publication used interactive account-level 2FA and therefore does not claim
+  trusted-publishing provenance. Future publications are bound to the repository's
+  protected GitHub Actions OIDC workflow and `npm-publish` environment.
+- Used `0.1.1` for the first npm publication. The protected `v0.1.0` engineering tag
   remains publicly visible and immutable after its final npm dry-run exposed the path
   bug, but it has no GitHub Release and no corresponding npm version.
 

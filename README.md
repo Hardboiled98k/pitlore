@@ -36,23 +36,42 @@ See the [current project status](./docs/STATUS.md), [adoption and dogfood eviden
 PitLore requires Node.js 22+ and Git. Consumer CI is configured for the current
 Node.js 22 and 24 LTS lines; the public Actions run must pass before a release.
 
-### Install from GitHub
+### Install from npm
 
-Until the first npm registry release, install the public repository directly:
+The supported public release is available from the official npm registry. For a
+project-local, lockfile-pinned installation:
 
 ```bash
 cd your-project
-npm install --save-dev "git+https://github.com/Hardboiled98k/pitlore.git#main"
+npm install --save-dev pitlore@0.1.1
 npx --no-install pitlore --version
 npx --no-install pitlore init --name my-project
 npx --no-install pitlore retrieve -i "async array iteration" -l typescript
 ```
 
-For a reproducible installation, replace `main` with an exact commit SHA or a release tag
-when one is available. A Git installation intentionally runs the repository's `prepare`
-build and therefore does not support `--ignore-scripts`; the packed npm artifact does.
-Global installation is supported for the packed tarball and future registry package, not
-for the Git dependency path.
+For a global CLI or one-off invocation:
+
+```bash
+npm install --global pitlore@0.1.1
+pitlore --version
+npx --yes pitlore@0.1.1 --version
+```
+
+### Install from GitHub
+
+Use the public Git repository when testing source changes or when an exact npm version is
+not available. Pin a release tag or commit SHA for reproducibility:
+
+```bash
+cd your-project
+npm install --save-dev "git+https://github.com/Hardboiled98k/pitlore.git#v0.1.1"
+npx --no-install pitlore --version
+```
+
+A Git installation intentionally runs the repository's `prepare` build and therefore does
+not support `--ignore-scripts`; the packed npm artifact does. Global installation is
+supported for the npm registry package or a packed tarball, not for the Git dependency
+path.
 
 ### Work from a source checkout
 
@@ -75,7 +94,7 @@ npm run -s pitlore -- distill -d "Forgot to await Promise.all in batch job" --id
 npm run -s pitlore -- approve batch-promise-all
 ```
 
-`npm ci` runs the `prepare` build. To inspect the exact future npm artifact locally:
+`npm ci` runs the `prepare` build. To inspect a locally built npm artifact:
 
 ```bash
 npm pack
@@ -88,17 +107,17 @@ executes ordinary temporary `npm exec` and global-install CLI paths. The consume
 configured to run the same tarball on Ubuntu, macOS, and Windows; its public Actions result
 must be green before release. The artifact includes a bundled MCP stdio runtime and does
 not depend on the repository's `src/`, `tsx`, existing `node_modules`, or a separately
-installed MCP SDK. For a version that exists on the official npm registry, the supported
-registry install is:
+installed MCP SDK. Confirm the published version and registry install with:
 
 ```bash
+npm view pitlore@0.1.1 version --registry=https://registry.npmjs.org
 npm install --global pitlore@0.1.1
 npx --yes pitlore@0.1.1 --version
 ```
 
-If `npm view pitlore@0.1.1 version --registry=https://registry.npmjs.org` returns
-`E404`, use the public Git source install above; a public source commit does not imply an
-npm publication. PitLore is developed in public at
+If a requested version returns `E404`, it has not been published to npm; use an exact
+public Git ref only when that source-install path is intended. A public source commit does
+not imply an npm publication. PitLore is developed in public at
 [`Hardboiled98k/pitlore`](https://github.com/Hardboiled98k/pitlore). The source repository
 is public, while every local `.pitlore/` store, candidate, review, and evidence ledger
 remains private by default and is excluded from Git.
@@ -294,7 +313,7 @@ npx --no-install pitlore serve
 # Source checkout
 npm run -s pitlore -- serve
 
-# Global packed tarball or future registry install
+# Global packed tarball or npm registry install
 pitlore serve
 ```
 
@@ -598,8 +617,9 @@ The dated verification evidence and next-session checklist live in
 [`docs/DOGFOOD.md`](./docs/DOGFOOD.md); durable rationale lives in
 [`docs/DECISIONS.md`](./docs/DECISIONS.md).
 
-Not yet proven or shipped externally: npm registry publication, independent community
-installs/contributions, a public hosted deployment, production browser SSO, real payment
-collection, real Sentry/CI provider credentials, reputation data, or compliance
-certification. Repository availability and isolated consumer smokes are engineering
-delivery facts, not evidence of community adoption.
+The source repository, npm `0.1.1`, and its GitHub Release are public. Not yet proven or
+shipped externally: independent community installs/contributions, a public hosted
+deployment, production browser SSO, real payment collection, real Sentry/CI provider
+credentials, reputation data, or compliance certification. Repository/package
+availability and isolated consumer smokes are engineering delivery facts, not evidence of
+community adoption.

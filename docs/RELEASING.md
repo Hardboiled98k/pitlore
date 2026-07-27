@@ -21,8 +21,10 @@ Lesson、Pack、evidence 或 Registry API 中独立出现的 `0.1.0` 不是 npm 
 先设置目标版本；如果 `package.json` 已经是该版本，跳过 `npm version`。需要更新时不要
 自动创建 tag：
 
+下面的版本号只是示例；运行任何发行命令前，必须替换为尚未发布的目标 SemVer：
+
 ```bash
-PITLORE_RELEASE_VERSION=0.1.1
+PITLORE_RELEASE_VERSION=0.1.2
 PITLORE_CURRENT_VERSION=$(node -p "require('./package.json').version")
 if [ "$PITLORE_CURRENT_VERSION" != "$PITLORE_RELEASE_VERSION" ]; then
   npm version "$PITLORE_RELEASE_VERSION" --no-git-tag-version
@@ -91,7 +93,7 @@ Tag、GitHub Release 和 npm publication 都是外部、不可假装回滚的维
 从已存在的受保护 tag ref 先运行不改变 registry 的工程演练：
 
 ```bash
-PITLORE_RELEASE_TAG=v0.1.1
+PITLORE_RELEASE_TAG=v0.1.2
 gh workflow run npm-publish.yml \
   --ref "$PITLORE_RELEASE_TAG" \
   -f tag="$PITLORE_RELEASE_TAG" \
@@ -108,7 +110,7 @@ release tag 创建后不得移动或删除。如果 tag-bound 演练失败，修
 公开可见且不可变的工程 tag；它没有 GitHub Release 和对应 npm 版本，首次可发布候选
 从 `v0.1.1` 继续。
 
-### 4.2 首次 npm package bootstrap
+### 4.2 首次 npm package bootstrap（`v0.1.1` 已完成，不得重复）
 
 npm 只允许已经存在的 package 配置 trusted publisher。因此包名仍为 E404 时，第一次
 发布不能由本项目的 OIDC workflow 自举，也不能用临时 token 静默绕过。维护者必须先
@@ -160,7 +162,19 @@ npm exec --yes \
 如果维护者要求从首个正式版本起每个版本都有 OIDC provenance，应停止并先明确设计、
 审计和记录一个非 `latest` 的 bootstrap prerelease；不得临时发明版本后继续。
 
-package 存在后，用支持该命令的 npm 11 配置唯一 trusted publisher：
+本仓库的实际 bootstrap 已于 `v0.1.1` 完成：
+
+- dry-run workflow 为
+  [`30286365114`](https://github.com/Hardboiled98k/pitlore/actions/runs/30286365114)，
+  tag commit 为 `efb3eb0ef723f3eac31fbbfdcac05419898811e4`；
+- workflow artifact、npm registry tarball 和 GitHub Release asset 字节一致，SHA-256
+  都是 `abe3e6fc9a55198d519ba93040b81676d21498f8c53011e77d418120d1f9df16`；
+- 首次发布使用账号级 2FA 交互授权，没有使用 npm automation token，也不声明
+  trusted-publishing provenance；
+- 发布后已配置下面的唯一 trusted publisher，并在核对后退出本机 npm 登录。
+
+package 存在后，用支持该命令的 npm 11 配置唯一 trusted publisher；本仓库已经完成此
+步骤，除非按 npm 官方流程纠正配置，否则不要重复创建：
 
 ```bash
 npm exec --yes \
@@ -177,6 +191,8 @@ npm logout --registry=https://registry.npmjs.org
 
 账号必须启用 2FA。Publisher 必须精确绑定 `Hardboiled98k/pitlore`、workflow
 `npm-publish.yml` 和 environment `npm-publish`，allowed action 只启用 `npm publish`。
+本仓库已在登出前通过 `npm trust list pitlore --json` 核对这些字段。该配置的真实 OIDC
+发布能力仍须由下一版本的成功 publish job 证明；配置存在本身不能冒充真实发布验证。
 
 ### 4.3 后续 OIDC 发布
 
