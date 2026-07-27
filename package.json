@@ -81,7 +81,7 @@
     "commander": "^13.1.0",
     "fastify": "5.10.0",
     "jose": "^6.2.3",
-    "js-yaml": "^4.1.0",
+    "js-yaml": "^5.2.2",
     "minimatch": "^10.0.1",
     "pg": "8.22.0",
     "safe-regex2": "5.1.1",
