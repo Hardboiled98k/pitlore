@@ -438,11 +438,11 @@ test "$(openssl dgst -sha256 operator-artifacts/pitlore-registry.dump | awk '{pr
 )
 ```
 
-At this `0.1.0` snapshot the ledger must contain nine rows, and every migration checksum
-length must be 64. `ledger_read` must be true and `ledger_write` false. Before accepting a
-backup policy, also compare source/restored counts for critical tables and perform one
-authenticated read after restarting the restored Registry. A file that has never completed
-an isolated restore is only a prospective backup.
+With migrations `001`–`009`, the ledger must contain nine rows, and every migration
+checksum length must be 64. `ledger_read` must be true and `ledger_write` false. Before
+accepting a backup policy, also compare source/restored counts for critical tables and
+perform one authenticated read after restarting the restored Registry. A file that has
+never completed an isolated restore is only a prospective backup.
 
 ## 8. Upgrade safely
 

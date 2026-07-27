@@ -1,6 +1,6 @@
 {
   "name": "pitlore",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Executable pit lore for coding agents — lessons from past bugs, retrieved and enforced at write time.",
   "homepage": "https://github.com/Hardboiled98k/pitlore#readme",
   "repository": {

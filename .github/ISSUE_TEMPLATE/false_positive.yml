@@ -20,7 +20,7 @@ body:
     attributes:
       label: PitLore and Pack version
       description: Include the exact PitLore version or commit and Pack version when applicable.
-      placeholder: "PitLore 0.1.0; pack 1.2.3"
+      placeholder: "PitLore 0.1.1; pack 1.2.3"
     validations:
       required: true
   - type: textarea

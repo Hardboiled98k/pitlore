@@ -278,7 +278,7 @@ my-lore/
 
 ### 6.5 CLI（开发者接口）
 
-当前 `0.1.0` 已实现的命令族：
+当前 `0.1.1` 已实现的命令族：
 
 ```text
 pitlore init [--path <team-lore>]

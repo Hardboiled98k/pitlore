@@ -180,7 +180,7 @@ jobs:
         run: node scripts/verify-release-artifact.mjs
       - name: Exercise npm publication without changing registry state
         env:
-          PITLORE_RELEASE_ARCHIVE: package-artifact/pitlore-${{ needs.build-package.outputs.version }}.tgz
+          PITLORE_RELEASE_ARCHIVE: ./package-artifact/pitlore-${{ needs.build-package.outputs.version }}.tgz
         run: npm publish "$PITLORE_RELEASE_ARCHIVE" --dry-run --access public --registry=https://registry.npmjs.org
       - name: Refuse an already published version or an ambiguous registry failure
         env:
@@ -238,5 +238,5 @@ jobs:
         run: node scripts/verify-release-artifact.mjs
       - name: Publish with npm trusted publishing
         env:
-          PITLORE_RELEASE_ARCHIVE: package-artifact/pitlore-${{ needs.build-package.outputs.version }}.tgz
+          PITLORE_RELEASE_ARCHIVE: ./package-artifact/pitlore-${{ needs.build-package.outputs.version }}.tgz
         run: npm publish "$PITLORE_RELEASE_ARCHIVE" --access public --registry=https://registry.npmjs.org

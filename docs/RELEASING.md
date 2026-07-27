@@ -22,7 +22,7 @@ Lesson、Pack、evidence 或 Registry API 中独立出现的 `0.1.0` 不是 npm 
 自动创建 tag：
 
 ```bash
-PITLORE_RELEASE_VERSION=0.1.0
+PITLORE_RELEASE_VERSION=0.1.1
 PITLORE_CURRENT_VERSION=$(node -p "require('./package.json').version")
 if [ "$PITLORE_CURRENT_VERSION" != "$PITLORE_RELEASE_VERSION" ]; then
   npm version "$PITLORE_RELEASE_VERSION" --no-git-tag-version
@@ -38,7 +38,7 @@ npm run test:git-install
 ```bash
 mkdir -p release-artifact
 npm pack --pack-destination release-artifact --silent
-PITLORE_RELEASE_ARCHIVE="release-artifact/pitlore-$PITLORE_RELEASE_VERSION.tgz"
+PITLORE_RELEASE_ARCHIVE="./release-artifact/pitlore-$PITLORE_RELEASE_VERSION.tgz"
 npm run test:package -- "$PITLORE_RELEASE_ARCHIVE"
 shasum -a 256 "$PITLORE_RELEASE_ARCHIVE"
 npm publish "$PITLORE_RELEASE_ARCHIVE" \
@@ -91,7 +91,7 @@ Tag、GitHub Release 和 npm publication 都是外部、不可假装回滚的维
 从已存在的受保护 tag ref 先运行不改变 registry 的工程演练：
 
 ```bash
-PITLORE_RELEASE_TAG=v0.1.0
+PITLORE_RELEASE_TAG=v0.1.1
 gh workflow run npm-publish.yml \
   --ref "$PITLORE_RELEASE_TAG" \
   -f tag="$PITLORE_RELEASE_TAG" \
@@ -102,6 +102,12 @@ gh workflow run npm-publish.yml \
 客户端 dry-run，但不验证 OIDC 授权。成功 run 的 `pitlore-npm-release` artifact 同时
 包含唯一 `.tgz` 和 `SHA256SUMS`；正式发布不得重新 pack。
 
+release tag 创建后不得移动或删除。如果 tag-bound 演练失败，修复必须进入 `main`，
+递增 package patch version 并创建新 tag；失败 run 的 artifact 不得用于正式发布。
+`v0.1.0` 即因 npm 11 将缺少 `./` 的相对 tarball 路径误解为 GitHub shorthand 而保留为
+公开可见且不可变的工程 tag；它没有 GitHub Release 和对应 npm 版本，首次可发布候选
+从 `v0.1.1` 继续。
+
 ### 4.2 首次 npm package bootstrap
 
 npm 只允许已经存在的 package 配置 trusted publisher。因此包名仍为 E404 时，第一次
@@ -110,7 +116,7 @@ npm 只允许已经存在的 package 配置 trusted publisher。因此包名仍�
 
 ```bash
 PITLORE_RELEASE_RUN_ID=<successful-dry-run-id>
-PITLORE_RELEASE_TAG=v0.1.0
+PITLORE_RELEASE_TAG=v0.1.1
 PITLORE_RELEASE_VERSION="${PITLORE_RELEASE_TAG#v}"
 PITLORE_RELEASE_COMMIT=$(git rev-parse "$PITLORE_RELEASE_TAG^{commit}")
 PITLORE_RELEASE_DIR=$(mktemp -d)
@@ -151,7 +157,7 @@ npm exec --yes \
 自动 provenance；GitHub Release 必须附上 artifact、SHA-256、tag commit 和这一边界。
 `npm profile get tfa` 的结果必须证明 2FA 已启用且不是 pending；`npm whoami` 单独不
 足以证明 2FA。
-如果维护者要求从 `0.1.0` 起每个正式版本都有 OIDC provenance，应停止并先明确设计、
+如果维护者要求从首个正式版本起每个版本都有 OIDC provenance，应停止并先明确设计、
 审计和记录一个非 `latest` 的 bootstrap prerelease；不得临时发明版本后继续。
 
 package 存在后，用支持该命令的 npm 11 配置唯一 trusted publisher：
@@ -177,7 +183,7 @@ npm logout --registry=https://registry.npmjs.org
 从下一版本开始，先按 4.1 演练，核对同一 artifact 后再显式运行：
 
 ```bash
-PITLORE_RELEASE_TAG=v0.1.1
+PITLORE_RELEASE_TAG=v0.1.2
 gh workflow run npm-publish.yml \
   --ref "$PITLORE_RELEASE_TAG" \
   -f tag="$PITLORE_RELEASE_TAG" \
@@ -199,7 +205,7 @@ provenance。OIDC/trusted-publisher 认证只有真实 `npm publish`（或未来
 1. 创建 GitHub Release，附上该 workflow artifact、SHA-256、tag commit、变更说明，
    以及首次 bootstrap 是否没有 trusted-publishing provenance。
 2. 在无仓库、无既有 `node_modules` 的新 consumer 中验证
-   `npm install --global pitlore@0.1.0` 与 `npx pitlore@0.1.0 --version`；后续版本替换
+   `npm install --global pitlore@0.1.1` 与 `npx pitlore@0.1.1 --version`；后续版本替换
    示例中的版本号。
 
 除上面明确记录的首次账号 bootstrap 边界外，如果 trusted publishing、npm owner/2FA、

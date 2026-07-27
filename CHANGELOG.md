@@ -5,6 +5,19 @@ for the distributed CLI package; Lesson and Pack schema versions have their own 
 
 ## Unreleased
 
+## [0.1.1] - 2026-07-28
+
+### Fixed
+
+- Mark local npm tarball arguments with an explicit `./` prefix so npm 11 treats the
+  release candidate as a file instead of a GitHub package shorthand.
+
+### Release
+
+- Use `0.1.1` for the first npm publication. The protected `v0.1.0` engineering tag
+  remains publicly visible and immutable after its final npm dry-run exposed the path
+  bug, but it has no GitHub Release and no corresponding npm version.
+
 ## [0.1.0] - 2026-07-27
 
 ### Changed
@@ -42,4 +55,5 @@ for the distributed CLI package; Lesson and Pack schema versions have their own 
 - Public Pack verification is bounded and fail-closed for paths, symlinks, sizes,
   sensitive content, detector safety, signatures, and licenses.
 
-[0.1.0]: https://github.com/Hardboiled98k/pitlore/releases/tag/v0.1.0
+[0.1.1]: https://github.com/Hardboiled98k/pitlore/releases/tag/v0.1.1
+[0.1.0]: https://github.com/Hardboiled98k/pitlore/tree/v0.1.0

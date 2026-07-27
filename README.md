@@ -79,7 +79,7 @@ npm run -s pitlore -- approve batch-promise-all
 
 ```bash
 npm pack
-npm install --global ./pitlore-0.1.0.tgz
+npm install --global ./pitlore-0.1.1.tgz
 pitlore --help
 ```
 
@@ -92,11 +92,11 @@ installed MCP SDK. For a version that exists on the official npm registry, the s
 registry install is:
 
 ```bash
-npm install --global pitlore@0.1.0
-npx --yes pitlore@0.1.0 --version
+npm install --global pitlore@0.1.1
+npx --yes pitlore@0.1.1 --version
 ```
 
-If `npm view pitlore@0.1.0 version --registry=https://registry.npmjs.org` returns
+If `npm view pitlore@0.1.1 version --registry=https://registry.npmjs.org` returns
 `E404`, use the public Git source install above; a public source commit does not imply an
 npm publication. PitLore is developed in public at
 [`Hardboiled98k/pitlore`](https://github.com/Hardboiled98k/pitlore). The source repository

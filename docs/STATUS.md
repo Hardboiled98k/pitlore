@@ -26,16 +26,16 @@ GitHub URL 安装、锁定和重放成功，但这仍是维护者验收，不能
 
 | 字段             | 2026-07-28 本地已核验值                                                                                                 |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| 产品             | PitLore `0.1.0`；Apache-2.0；Node.js 22+ / TypeScript；consumer CI 已配置覆盖 Node.js 22/24 LTS                         |
+| 产品             | PitLore `0.1.1` release candidate；Apache-2.0；Node.js 22+ / TypeScript；consumer CI 已配置覆盖 Node.js 22/24 LTS       |
 | 仓库             | `Hardboiled98k/pitlore`，public；默认分支 `main`                                                                         |
-| 当前工程基线     | `6b5af87` 发布准备基线；包含 public discovery facets v1、migration `009`、完整开源文档、跨平台安装门禁与社区治理配置       |
-| CI 见证          | 公开 `6b5af87`：CI run `30282642062`（11/11 jobs）、CodeQL run `30282641056`（3/3）及两个 Dependabot update run 全绿；17/17 check-runs success、0 annotations |
+| 当前工程基线     | `a77641c` 发布治理基线；包含 public discovery facets v1、migration `009`、完整开源文档、跨平台安装门禁与社区治理配置       |
+| CI 见证          | 公开 `a77641c`：CI run `30283470012`（11/11 jobs）、CodeQL run `30283469002`（3/3）全绿；14/14 check-runs success、0 annotations |
 | 工作树           | 公共历史从 GitHub noreply clean import 开始；本地与公开 `main` 同步，旧开发历史只保留在 private archive                  |
-| 完整验证         | 当前工作树 `npm run verify`：43 files / **376 tests**，typecheck 和 build 通过                                         |
+| 完整验证         | 当前工作树 `npm run verify`：44 files / **377 tests**，typecheck 和 build 通过                                         |
 | 自托管           | 真 PostgreSQL 17：`001`–`008` 历史 release → `009` → CLI reindex/幂等复跑/runtime 拒绝，以及 fresh restore/restart 全通过 |
 | 分页性能探针     | synthetic 100k releases：PostgreSQL keyset 取 101 行 lookahead，index 扫描约 102 行，约 0.57 ms；只是工程证据           |
 | Demo / 发布包    | tenant Demo 通过；tarball、npm exec/全局安装、隔离 Git smoke 及无凭据公开 GitHub URL 安装/lock 重放均通过；约 0.53 MB / 2.73 MB / 243 files |
-| npm 发布自动化   | 仅手动 tag-ref workflow 已实现同一 artifact/SHA/六组合 consumer/OIDC 门禁；`npm-publish` environment 只允许 `v*` tag，但 workflow 尚未运行；npm 包仍未首发，trusted publisher 必须等首次 2FA bootstrap 后配置 |
+| npm 发布自动化   | `v0.1.0` run `30284388572` 的 source/self-host/六组合 consumer 全通过，最终 npm dry-run 因相对 tarball 被 npm 11 误解为 Git shorthand 而失败；公开 tag 保持不可变，但没有 GitHub Release 或对应 npm 版本；修复后的首发候选为 `v0.1.1` |
 | 仓库保护         | live `main` 禁止 force-push/delete，要求 GitHub Actions `CI required`、PR stale-review dismiss 与 conversation resolution；单维护者审批数为 0，admin 保留紧急绕过；active `v*` tag ruleset 禁止已创建标签更新或删除 |
 | 开源治理         | GitHub community profile = 100%；CODEOWNERS、Contributor Covenant 2.1、结构化 issue forms、PR template 和 Dependabot 已启用；行为准则如实披露单维护者无独立申诉方边界 |
 | 依赖审计         | production tree = 0；high/critical gate 通过；286 个 lock artifact 均为 npm 官方 registry；MCP bundle notice 正文有 SHA-256 门禁；audit 汇总的 2 个 dev-only Hono moderate 已在所装 1.19.17 修复，且 adapter 不进入 MCP bundle |
@@ -108,8 +108,10 @@ GitHub URL 安装、锁定和重放成功，但这仍是维护者验收，不能
 - 独立 `npm-publish.yml` 只允许从手动选择的既有 release tag 运行；tag/ref/package
   version、main ancestry、package identity 和 SHA-256 必须一致，只有最后的受保护 job
   获得 OIDC 权限。GitHub `npm-publish` environment 已仅允许 `v*` tag；active tag ruleset
-  会阻止已创建的 `v*` 标签更新或删除。workflow 尚未实际运行；npm trusted publisher
-  必须等首次包由账号 2FA bootstrap 后配置。
+  会阻止已创建的 `v*` 标签更新或删除。`v0.1.0` 演练已真实运行：除最后的 npm
+  dry-run 路径解析外均通过；该 tag 公开可见且保持不可变，但没有 GitHub Release 或
+  对应 npm 版本，修复使用新 patch version。npm trusted publisher 必须等首次包由账号
+  2FA bootstrap 后配置。
 
 ### 仍缺真实采用
 

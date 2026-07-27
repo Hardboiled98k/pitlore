@@ -27,7 +27,7 @@ body:
     attributes:
       label: PitLore version or commit
       description: Include the exact version, release tag, or full Git commit when applicable.
-      placeholder: "0.1.0 or 0123456789abcdef..."
+      placeholder: "0.1.1 or 0123456789abcdef..."
   - type: textarea
     id: question
     attributes:
