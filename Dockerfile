@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package.json package-lock.json tsconfig.json ./
 RUN npm ci --ignore-scripts
 COPY src ./src
-COPY scripts/bundle-mcp-runtime.mjs ./scripts/bundle-mcp-runtime.mjs
+COPY scripts/bundle-mcp-runtime.mjs scripts/clean-dist.mjs ./scripts/
 COPY THIRD_PARTY_NOTICES.md ./THIRD_PARTY_NOTICES.md
 RUN npm run build && npm prune --omit=dev
 

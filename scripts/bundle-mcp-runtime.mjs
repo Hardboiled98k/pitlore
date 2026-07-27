@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import fs from "node:fs";
 import { builtinModules } from "node:module";
 import path from "node:path";
@@ -50,13 +51,62 @@ for (const input of bundledInputs) {
   bundledPackageRoots.set(name, roots);
 }
 const licensedPackages = new Map([
-  ["@modelcontextprotocol/sdk", "1.29.0"],
-  ["ajv", "8.20.0"],
-  ["ajv-formats", "3.0.1"],
-  ["fast-deep-equal", "3.1.3"],
-  ["fast-uri", "3.1.4"],
-  ["json-schema-traverse", "1.0.0"],
-  ["zod-to-json-schema", "3.25.2"],
+  [
+    "@modelcontextprotocol/sdk",
+    {
+      version: "1.29.0",
+      noticeSha256:
+        "62a5fe2f65c55166300bcf53b862a13b49ec8ad25207f889e27d736ef8ecb9a2",
+    },
+  ],
+  [
+    "ajv",
+    {
+      version: "8.20.0",
+      noticeSha256:
+        "08a91abb6542c5d26395b1a4fa4be973ed114efd1931a79519683c117533d0dd",
+    },
+  ],
+  [
+    "ajv-formats",
+    {
+      version: "3.0.1",
+      noticeSha256:
+        "ae6a85b16167d95100c666514c6c0e5722b9d7361c892a4568203d3ae2c34087",
+    },
+  ],
+  [
+    "fast-deep-equal",
+    {
+      version: "3.1.3",
+      noticeSha256:
+        "e5b37df33a552cc525bf686d6abb8061ff8e49d7ec256f65edf5f3338d44f929",
+    },
+  ],
+  [
+    "fast-uri",
+    {
+      version: "3.1.4",
+      noticeSha256:
+        "a3b18179bc70db1203b99151da5ffe52f6a33b33307a931b4bc7aa469aad562b",
+    },
+  ],
+  [
+    "json-schema-traverse",
+    {
+      version: "1.0.0",
+      noticeSha256:
+        "e5b37df33a552cc525bf686d6abb8061ff8e49d7ec256f65edf5f3338d44f929",
+    },
+  ],
+  [
+    "zod-to-json-schema",
+    {
+      version: "3.25.2",
+      noticeSha256:
+        "4bf456ec67f53378a0c99bdbf10bb449e350c2621560097e09256c21588a6db0",
+    },
+  ],
 ]);
 const bundledPackages = new Set(bundledPackageRoots.keys());
 const missingNotices = [...bundledPackages].filter(
@@ -76,7 +126,10 @@ const notices = fs.readFileSync(
   path.join(projectRoot, "THIRD_PARTY_NOTICES.md"),
   "utf8",
 );
-for (const [name, expectedVersion] of licensedPackages) {
+for (const [
+  name,
+  { version: expectedVersion, noticeSha256 },
+] of licensedPackages) {
   for (const packageRoot of bundledPackageRoots.get(name)) {
     const manifest = JSON.parse(
       fs.readFileSync(path.join(packageRoot, "package.json"), "utf8"),
@@ -87,8 +140,24 @@ for (const [name, expectedVersion] of licensedPackages) {
       );
     }
   }
-  if (!notices.includes(`## ${name} ${expectedVersion} —`)) {
+  const heading = `## ${name} ${expectedVersion} —`;
+  const headingOffset = notices.indexOf(heading);
+  if (headingOffset === -1) {
     throw new Error(`Third-party notice heading is missing for ${name}`);
+  }
+  const contentStart = notices.indexOf("\n", headingOffset) + 1;
+  const nextHeading = notices.indexOf("\n## ", contentStart);
+  const content = notices
+    .slice(contentStart, nextHeading === -1 ? undefined : nextHeading)
+    .trim();
+  const actualNoticeSha256 = crypto
+    .createHash("sha256")
+    .update(content)
+    .digest("hex");
+  if (actualNoticeSha256 !== noticeSha256) {
+    throw new Error(
+      `Third-party notice body does not match the reviewed ${name}@${expectedVersion} text`,
+    );
   }
 }
 if (

@@ -9,7 +9,7 @@
 
 - [ ] Relevant regression tests added or updated
 - [ ] `npm run verify`
-- [ ] `npm run test:package`
+- [ ] `npm run test:install`
 - [ ] `npm run test:self-host` (Registry, migration, RLS, or Docker changes)
 - [ ] `npm run audit:prod`
 - [ ] Changed production sources pass `pitlore check`

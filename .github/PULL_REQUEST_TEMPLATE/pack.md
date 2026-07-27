@@ -14,7 +14,7 @@
 
 - [ ] `pitlore pack verify <path>`
 - [ ] `npm run verify`
-- [ ] `npm run test:package`
+- [ ] `npm run test:install`
 - [ ] No secrets, PII, customer names, internal hosts, local paths, or executable detectors
 - [ ] Block detector has bad/good fixtures and every fixture behaves as declared
 - [ ] Breaking detector/ID/schema changes use a major version

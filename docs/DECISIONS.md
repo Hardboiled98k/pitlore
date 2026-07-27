@@ -238,3 +238,30 @@
 - **历史口径**：公共 Git history 有意从 clean import 开始，不冒充项目从该提交才开始；
   公开后以 public `main`、Actions 和 release artifact 为对外真相源；私有归档只用于
   维护者追溯，不作为公开用户必须依赖的构建、发布或 provenance 来源。
+
+## D-018 — 移除固定周期收口，改用持续采用证据与可复现发行门禁
+
+- **日期**：2026-07-27
+- **状态**：accepted override；替代 D-016 中仍保留固定观察周期的当前执行方式，不抹掉
+  D-007、D-013、D-016 已发生的历史事实。
+- **决策**：项目不再设置按日历天数或 streak 结束的 dogfood 收口目标。长期记录独立用户
+  安装、跨真实任务重复使用、人工 usefulness、missed-existing/coverage-gap 和 detector
+  TP/FP/FN；样本不足时保持未知，但这些采用信号不阻塞正常开源开发。
+- **发行门禁**：发布候选必须从源码只构建一次 npm tarball，并让 Ubuntu、macOS、Windows
+  consumer 安装同一 artifact；tarball 必须在 `--ignore-scripts` 下工作。npm registry
+  首发前，Git URL 安装可作为公开过渡路径，但必须通过 `prepare` 构建并在隔离 Git 仓中
+  验证真实 bin、version 和 help，不能把 npm 的零退出码当成 CLI 可用证据。
+- **发布边界**：本地通过发行门禁不等于已经创建 tag、GitHub Release 或 npm publication。
+  任何 push、tag、Release、签名或 npm publish 仍需维护者明确授权；正式 npm 发布必须
+  对已经通过 smoke 的同一 tarball 执行，并显式使用官方 registry。
+
+## D-019 — 最低运行时提升到受支持的 Node.js LTS
+
+- **日期**：2026-07-27
+- **状态**：accepted override；替代 D-008 的 Node.js 20+ 运行时基线。
+- **决策**：npm `engines`、开发文档和发行文档统一要求 Node.js 22+；常规 verify、
+  package build 和 self-host 使用最低版本 22，consumer install 同时覆盖 22 与 24 LTS。
+- **原因**：Node.js 20 已进入 EOL，不应继续作为新开源发行的唯一运行时证据。最低版本
+  和当前 LTS 双线验证同时覆盖兼容下界与主流新安装环境。
+- **影响**：不再承诺 Node.js 20；后续最低版本或 LTS 覆盖变化必须同步 manifest、
+  lockfile、CI、README、贡献文档和发行手册。

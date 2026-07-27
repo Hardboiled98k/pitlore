@@ -12,7 +12,7 @@
   },
   "type": "module",
   "bin": {
-    "pitlore": "./dist/cli.js"
+    "pitlore": "dist/cli.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -31,11 +31,15 @@
     "demo",
     "docs",
     "THIRD_PARTY_NOTICES.md",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "SECURITY.md",
+    "SUPPORT.md"
   ],
   "scripts": {
-    "build": "tsc && node scripts/bundle-mcp-runtime.mjs",
+    "build": "node scripts/clean-dist.mjs && tsc && node scripts/bundle-mcp-runtime.mjs",
     "audit:prod": "npm audit --omit=dev --registry=https://registry.npmjs.org",
     "audit:build": "npm audit --audit-level=high --registry=https://registry.npmjs.org",
     "predemo:tenant": "npm run build",
@@ -44,16 +48,20 @@
     "pitlore": "tsx src/cli.ts",
     "test": "vitest run",
     "test:package": "node scripts/package-smoke.mjs",
+    "test:git-install": "node scripts/git-install-smoke.mjs",
+    "test:install": "npm run test:package && npm run test:git-install",
     "test:self-host": "bash scripts/self-host-smoke.sh",
     "test:watch": "vitest",
     "registry:serve": "tsx src/cli.ts registry serve",
     "typecheck": "tsc --noEmit",
-    "verify": "npm test && npm run typecheck && npm run build",
-    "prepack": "npm run build",
+    "verify": "npm run verify:lockfile && npm test && npm run typecheck && npm run build",
+    "verify:lockfile": "node scripts/verify-lockfile.mjs",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run verify && npm run demo:tenant && npm run test:install",
     "seed:copy": "node --experimental-strip-types -e \"console.log('seed lives in ./seed')\""
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "keywords": [
     "coding-agent",
@@ -64,6 +72,10 @@
     "pitlore"
   ],
   "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "dependencies": {
     "commander": "^13.1.0",
     "fastify": "5.10.0",

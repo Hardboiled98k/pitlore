@@ -5,16 +5,16 @@
 | 状态     | Draft                                                        |
 | 版本     | 0.4                                                          |
 | 日期     | 2026-07-27                                                   |
-| 来源     | OpenAI Build Week 构思讨论；现已转为独立开源产品             |
+| 来源     | Coding-agent 工程经验沉淀需求；当前为独立开源产品            |
 | 产品方向 | Open-source Developer Tools                                  |
 | 工作名   | **PitLore**（暂定；域名 pitlore.com 意向持有，**暂不购买**） |
 | 核心单元 | **Lesson**（单条踩坑经验 / 可执行负向约束）                  |
 | 仓库单元 | **Lore**（一组 Lesson 的 debug 仓，可公可私）                |
 | 安装单元 | **Pack**（可版本化安装的 lesson 集合）                       |
 
-> 本文保存产品范围和产品质量信号。用户已按 D-016 将项目转为边开源边持续开发；
-> 7 天 dogfood 与人工 evidence 不再阻塞开源、开发、release 或 Phase 推进，但仍不能
-> 用工程测试冒充真实采用或生产证据。当前实现/验证事实以
+> 本文保存产品范围和产品质量信号。项目按 D-018 持续公开开发，不设置固定周期
+> dogfood 收口；独立安装、跨任务重复使用和人工 evidence 长期记录，但仍不能用工程测试
+> 冒充真实采用或生产证据。当前实现/验证事实以
 > [`STATUS.md`](./STATUS.md) 为准。
 
 ---
@@ -358,14 +358,13 @@ pitlore path
 | 本地索引  | Phase 1 直接读 YAML 文件；规模验证后再评估 SQLite/embedding                                          |
 | Team 服务 | Phase 1 不依赖服务；当前已有 Phase 3 Node/PostgreSQL 自托管 baseline；托管 SaaS/对象存储仍待真实需求 |
 | LLM       | GPT-5.6 / 用户配置的 API（蒸馏与检索重排）                                                           |
-| 打包      | npm 包名意向 `pitlore`（发布前再确认占用）；Docker 发布 registry                                     |
+| 打包      | Git/npm tarball；npm 包名 `pitlore` 尚未发布；Docker 发布 registry                                  |
 
-### 6.10 OpenAI Build Week 起源与当前方向
+### 6.10 公开开源开发方向
 
-- 项目最初围绕 **Codex + GPT-5.6** 和 Developer Tools / Plugin + MCP 形态构思。
-- 当前不再以黑客松提交为交付目标，转为独立开源产品并持续开发。
-- README 保留真实的 Codex 协作背景；安装说明、Demo 和架构文档服务于开源用户，
-  不再为评委或 Devpost 材料设门槛。
+- 项目围绕 **Codex + GPT-5.6** 和 Developer Tools / Plugin + MCP 形态开发。
+- 安装说明、Demo、架构文档和发行门禁全部服务于独立开源用户。
+- 是否扩展 Registry 托管、商业化或生态集成，服从真实用户需求与生产证据。
 
 ---
 
@@ -437,23 +436,23 @@ Fork / PR 改进某条 lesson
 6. 路径 scope、相关性阈值、非法 detector fail-closed。
 7. 声明式 detector 的 bad/good fixtures；新规则默认 warn，通过人工审批与测试后才可 block。
 8. 一个代码库特定的 Demo（例如多租户查询遗漏 `tenantId`），展示完整闭环。
-9. npm 安装、CI、英文 README 与 5 分钟上手路径。
+9. 可复现 Git/npm tarball 安装、CI、英文 README 与 5 分钟上手路径。
 
 **Phase 1 范围明确不依赖：** SQLite/embedding、公共 Registry、网站、SSO/RBAC、计费、
 任意代码 detector、自动扫描全部 Git 历史。D-014 允许这些后续层的工程提前开发，但
 它们不能反向替代真实使用和人工效用证据。
 
-**非阻塞产品质量目标：**
+**长期产品质量信号：**
 
 - 新用户 5 分钟内跑通本地闭环。
 - 从一次真实 fix 到 approved Lesson 小于 2 分钟。
 - block detector 必须具备 bad/good fixtures，且默认无阻断级误报。
-- 至少一个真实团队通过私有 Git 连续使用一周。
+- 至少一个独立外部用户完成安装，并在多个真实任务中重复使用。
 - 真实样本的 retrieve usefulness、missed-existing/coverage-gap、detector TP/FP/FN
   口径可重复汇总；分母不足时保持未知，不以 100% 代替证据。
 
-按 D-016，以上目标用于衡量真实产品价值，不再作为源码开源、日常开发、版本发布或
-Phase 推进的前置条件。工程测试不能代替这些信号，缺少样本时必须继续标为未知。
+按 D-018，以上信号用于衡量真实产品价值，不作为源码开源、日常开发或版本发布的
+前置条件。工程测试不能代替这些信号，缺少样本时必须继续标为未知。
 
 ### 8.2 Phase 2：开源共享
 
@@ -475,9 +474,10 @@ deterministic lock、checksum/cache、SemVer dependency、Ed25519 trust、3 个�
 以及单 artifact/完整 air-gap dependency bundle 已实现。public Pack 必须携带非空 UTF-8
 `LICENSE`；校验器在解析 YAML 前先执行文件数、单文件、总大小预算，并拒绝中间路径或
 最终目标的 symlink/realpath 越界。npm tarball 已包含可独立运行的 bundled MCP stdio
-runtime，并有真实安装 smoke；GitHub 源码仓库已通过 clean import 公开，但 npm 尚未
-发布，独立社区安装、贡献和采用也未发生。这些外部事实必须如实披露，但不阻塞继续
-开源开发。
+runtime，并有真实 tarball 安装 smoke；Git dependency 通过 `prepare` 从源码生成
+`dist`，隔离 consumer 会验证真实 bin/version/help。GitHub 源码仓库已通过 clean import
+公开，但 npm 尚未发布，独立社区安装、贡献和采用也未发生。这些外部事实必须如实
+披露，但不阻塞继续开源开发。
 
 ### 8.3 Phase 3：网站进化
 
@@ -526,9 +526,11 @@ role。public read、browser auth、billing webhook、protected API auth 和 rel
 - LLM 蒸馏：用 **固定 fixture + schema 校验**；对模型输出做结构断言，不做全文金句快照。
 - 金丝雀坏代码样本：`fixtures/bad/*` vs `fixtures/good/*` 保证 detector/check 稳定。
 
-**当前工程快照（2026-07-27）：** `npm test` 为 373 项自动化测试；独立
-`npm run test:self-host` 覆盖 9 个 migration 的 fresh/upgrade、least-privilege、backup/restore
-和 restart。二者都是工程回归证据，不等于真实 IdP、支付、公开托管或社区采用证据。
+**当前工程快照（2026-07-27）：** `npm test` 为 376 项自动化测试；独立
+`npm run test:self-host` 覆盖 9 个 migration 的 fresh/upgrade、least-privilege、
+backup/restore 和 restart；发行 CI 已配置为让 Ubuntu、macOS、Windows consumer 安装
+同一 npm tarball，并单独验证 Git dependency 构建，提交后的 public Actions 仍需复核。
+这些都是工程回归证据，不等于真实 IdP、支付、公开托管或社区采用证据。
 
 ### 9.2 MVP 必测模块
 
@@ -580,14 +582,13 @@ role。public read、browser auth、billing webhook、protected API auth 和 rel
 | 私有仓 vs 公共仓占比             | 是否打中企业财产场景                                              |
 | 域名购买触发                     | 例如：连续 4 周周活 agent 接入 > N，或出现第二团队付费/自托管意向 |
 
-### 11.2 历史黑客松演示标准（不再作为当前交付门槛）
+### 11.2 开源 onboarding / Demo 质量标准
 
-以下内容保留项目起源时期的验收思路；当前可继续作为开源 onboarding/Demo 质量参考，
-但不再要求黑客松提交物：
+以下内容用于约束公开用户第一次体验和可验证 Demo：
 
 1. 试用者按 README **&lt; 5 分钟** 跑通 MCP + 一次 retrieve。
 2. Demo 中 **可见**「坏模式 → 命中 Lesson → 安全改写」。
-3. 讲清：**本地私有财产** 与 **未来类 GitHub 公/私仓** 路线。
+3. 讲清：**本地私有财产** 与 **GitHub 公/私 Pack** 路线。
 4. 如制作公开演示材料，应准确说明 Codex + GPT-5.6、repo 和验证边界。
 
 ---
@@ -606,17 +607,8 @@ role。public read、browser auth、billing webhook、protected API auth 和 rel
 
 1. ~~品牌最终名~~ → **暂定 PitLore**；是否永久采用待验证后再定。
 2. 本地真相源：纯 Git 是否足够，还是 MVP 就上 SQLite index？
-3. ~~公共层是否进入黑客松提交物，还是仅架构预留 + Mock？~~ → **已提前实现 Phase 2
-   supply-chain engineering baseline；项目已取消参赛并转为独立开源开发，公开仓已
-   建立，社区采用仍须按事实记录。**
-4. 蒸馏输入默认接受「脱敏 diff」还是「纯自然语言描述」优先？
-5. ~~与官方 Codex Plugin 上架流程的时间是否赶得上 Build Week？~~ → **不再以
-   Build Week 截止时间推进；是否上架按开源用户需求和真实发布条件决定。**
-6. ~~许可证：协议本体 Apache-2.0，公共 lesson 内容 CC-BY / 另表？~~ → **已定：仓库与官方
-   public Lesson/Pack 内容统一 Apache-2.0；第三方 public Pack 必须自带其适用 `LICENSE`。**
-7. ~~GitHub `pitlore` 仓库何时公开？~~ → **已按 D-017 从受审计源码做 clean import
-   并公开，旧开发历史继续保留为 private archive。** npm 包名可用性与正式发布仍需在
-   发布前确认。
+3. 蒸馏输入默认接受「脱敏 diff」还是「纯自然语言描述」优先？
+4. 首个 npm 版本与 GitHub Release 何时发布，以及后续稳定版本节奏如何定义？
 
 ---
 
@@ -634,7 +626,7 @@ role。public read、browser auth、billing webhook、protected API auth 和 rel
 
 - 网页沙雕玩具传播强，但与「Codex 使用时不一样」结合弱。
 - 当时判断 **PitLore** 直接打在 coding agent 基建缺口上，支持本地私有化与类 GitHub
-  贡献，适合作为正式产品方向与黑客松主提交；当前已放弃参赛，只保留独立开源产品方向。
+  贡献，因此收敛为当前独立开源产品方向。
 
 ### 14.3 一句话 PRD 摘要
 

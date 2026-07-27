@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Support and troubleshooting
+    url: https://github.com/Hardboiled98k/pitlore/blob/main/SUPPORT.md
+    about: Check supported channels, current boundaries, and data-safety rules.
+  - name: Private security report
+    url: https://github.com/Hardboiled98k/pitlore/security/advisories/new
+    about: Report suspected vulnerabilities or private-data exposure confidentially.

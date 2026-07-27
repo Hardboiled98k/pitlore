@@ -8,6 +8,8 @@ dist/
 !.env.example
 secrets/
 coverage/
+release-artifact/
+*.tgz
 operator-artifacts/
 bootstrap-token*.json
 *.dump

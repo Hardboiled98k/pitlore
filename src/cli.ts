@@ -84,6 +84,7 @@ import {
   putLesson,
   rejectLesson,
 } from "./store.js";
+import { PACKAGE_VERSION } from "./version.js";
 
 const program = new Command();
 
@@ -92,7 +93,7 @@ program
   .description(
     "PitLore — executable pit lore for coding agents (lessons from past bugs)",
   )
-  .version("0.1.0");
+  .version(PACKAGE_VERSION);
 
 program
   .command("init")

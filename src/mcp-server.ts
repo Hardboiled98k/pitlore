@@ -16,6 +16,7 @@ import {
   loadStore,
   putLesson,
 } from "./store.js";
+import { PACKAGE_VERSION } from "./version.js";
 
 export interface PitLoreMcpServer {
   connect(transport: unknown): Promise<void>;
@@ -28,7 +29,7 @@ export function createMcpServer(
 ): PitLoreMcpServer {
   const server = new McpServer({
     name: "pitlore",
-    version: "0.1.0",
+    version: PACKAGE_VERSION,
   });
 
   let activeRoot = loreRoot && loreRoot.trim().length > 0 ? loreRoot : undefined;

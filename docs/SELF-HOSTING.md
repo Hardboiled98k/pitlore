@@ -6,12 +6,30 @@ production browser SSO, real payment collection, public TLS operation, or compli
 
 ## 1. Prerequisites and trust boundary
 
+- Git and Node.js 22+ for the source checkout and CLI commands below.
 - Docker Engine with Compose v2 and a persistent Docker volume.
 - `openssl` for generating three independent PostgreSQL passwords.
+- `curl` for the health, readiness, and authenticated HTTP probes.
 - An operator-controlled `.env`; never commit `.env`, `secrets/`, dumps, or bearer tokens.
 - An owner-only `operator-artifacts/` directory for temporary bearer and dump output.
 - A TLS reverse proxy and firewall before any non-loopback exposure.
 - An OIDC provider capable of issuing JWTs if humans will administer the Registry.
+
+Password, permission, and bootstrap shell blocks assume a POSIX shell on macOS/Linux.
+On Windows Docker Desktop, run them inside WSL so the documented file-mode boundary is
+preserved.
+
+Run this guide from a public source checkout:
+
+```bash
+git clone https://github.com/Hardboiled98k/pitlore.git
+cd pitlore
+npm ci
+```
+
+Commands written as `pitlore ...` require the GitHub or future npm CLI installation from
+the main README. From this source checkout, the equivalent form is
+`npm run -s pitlore -- ...`.
 
 The default publishes Registry only on `127.0.0.1:8787`. PostgreSQL is reachable only on
 the internal Compose network and has no host port. Keep the loopback default unless a

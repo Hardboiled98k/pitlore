@@ -248,8 +248,10 @@
 - **现象**：项目检查全部通过，但 GitHub 标注 `actions/checkout@v4` 与
   `actions/setup-node@v4` 的内部 Node 20 runtime 已弃用。
 - **根因**：Action 自身 runtime 与项目要测试的 Node.js 版本是两层配置；旧 Action
-  major 已过期，但 `node-version: 20` 仍可以是项目测试目标。
-- **修复**：两项 Action 升级到 v6，保留 `node-version: 20`。
+  major 已过期。当时 `node-version: 20` 仍是项目测试目标；Node.js 20 后来进入 EOL，
+  当前最低运行时已由 D-019 提升到 22。
+- **修复**：当时先把两项 Action 升级到 v6；当前 workflow 继续使用 v6，并以
+  Node.js 22 为最低版本、在 consumer CI 额外覆盖 Node.js 24。
 - **回归检查**：CI run `29430093844` 全步骤成功，annotations 为空。
 
 ## Lockfile 固定到镜像，CI 被镜像可用性绑架
@@ -449,3 +451,61 @@
 - PitLore 不会根据 PID 自动删除疑似 stale lock，避免并发恢复误删另一个活跃进程的新锁。
 - 按错误中的 lock 路径读取 PID，先用系统工具确认该进程已经退出，再手工删除对应 lock；
   不能只依据文件年龄判断。若进程仍在，等待或终止原操作，不要绕过互斥。
+
+## npm Git dependency 可能安装成功却没有 CLI
+
+- **发生时间**：2026-07-27，公开仓库匿名安装与发行链路审计。
+- **现象**：`npm install git+https://github.com/...` 返回 0 并显示已安装依赖，但消费端
+  没有 `node_modules/pitlore/dist/cli.js`，也没有 `.bin/pitlore`；真正执行 CLI 才返回
+  command not found。把同一 Git dependency 直接做全局临时 prefix 安装，在当前 npm 10
+  环境还可能让构建依赖落到错误 prefix，因此不能从项目本地成功外推全局 Git 安装。
+- **根因**：`dist/` 正确地保持 Git ignored，但包此前只有 `prepack`；真实 Git dependency
+  生命周期没有生成发行目录。测试只覆盖源码树 `npm pack`，且把 npm 零退出码误当成可用
+  CLI 证据。
+- **修复**：用 `prepare` 构建 Git dependency，项目本地安装后直接断言真实 bin、
+  package/CLI/MCP version 和 help；Git 路径明确不支持 `--ignore-scripts`，也不承诺全局
+  安装。全局安装由已经包含 `dist/` 的 tarball/未来 registry 包承担。
+- **回归检查**：`npm run test:git-install` 从不含 `dist/` 的临时 Git 仓安装到空 consumer；
+  `npm run test:package` 让 tarball 在 `--ignore-scripts` 下完成项目本地与全局安装，并验证
+  CLI/MCP/init/retrieve/check。CI 只生成一个 tarball，由 Ubuntu、macOS、Windows consumer
+  验证同一文件；提交后的公开 Actions 结果仍必须复核。
+
+## ignored `dist/` 的旧输出可能进入新 npm 包
+
+- **发生时间**：2026-07-27，发行包对抗式审计。
+- **现象**：在 `dist/` 预放已不再对应任何 source 的旧 JavaScript 后运行原有 build，
+  文件仍然存在，随后的 `npm pack` 也把它纳入 tarball。Git 工作树仍可显示 clean，
+  因为 `dist/` 本来就应当 ignored。
+- **根因**：`tsc` 只写当前输出，不删除已移除 source 对应的旧文件；package `files`
+  又正确地包含整个 `dist/`，所以“重新编译成功”不等于发行目录干净。
+- **修复**：build 先运行 `scripts/clean-dist.mjs`，只允许删除解析后的仓库直属 `dist`
+  路径，再执行 TypeScript 和 MCP bundle；Git install smoke 还明确拒绝任何预带 `dist`
+  的 source fixture，避免 `prepare` 失效时借旧产物蒙混通过。
+- **回归检查**：故意写入的旧输出在 build 后不存在；package/Git install smoke 与
+  `npm publish --dry-run --json` 均通过。
+
+## 外层 npm publish 配置会污染嵌套 smoke
+
+- **发生时间**：2026-07-27，仓库根发布演练。
+- **现象**：`npm publish --dry-run --json` 的 `prepublishOnly` 进入 package smoke 后，
+  内层 `npm pack --silent` 返回 JSON；脚本把最后一行 `]` 当成 tgz 文件名并报 `ENOENT`。
+  只修 JSON 解析仍会留下更危险的 dry-run 假阳性：临时 install 可以不执行却返回成功。
+- **根因**：npm 会把外层 CLI 配置作为 `npm_config_*` 传给 lifecycle；嵌套 npm 命令
+  不能假设自己拥有默认输出和执行语义。
+- **修复**：两个 install smoke 的 npm helper 都显式使用
+  `--dry-run=false --json=false`。这只影响由脚本创建并最终删除的临时 consumer，不改变
+  外层 publish 的 dry-run 边界。
+- **回归检查**：仓库根 `npm publish --dry-run --json` 完成 376 tests、typecheck/build、
+  tenant Demo、tarball/Git install smoke 后成功返回完整发行 manifest，registry 未改变。
+
+## 新 build helper 没有进入 Docker build stage
+
+- **发生时间**：2026-07-27，新增 clean build 后的 self-host 回归。
+- **现象**：主机上的 build、package 和 Git install 全绿，但 fresh Docker image 在
+  `npm run build` 报找不到 `/app/scripts/clean-dist.mjs`，PostgreSQL 已 healthy 而应用
+  无法启动。
+- **根因**：多阶段 Dockerfile 只 allowlist-copy 旧的 bundle helper；新增 build 依赖
+  没有同步进入镜像。主机文件系统完整，因此本地 npm 验证无法覆盖该差异。
+- **修复**：build stage 同时复制 bundle 与 clean helper，继续保持最小 build context。
+- **回归检查**：真实 PostgreSQL 17 self-host smoke 重新完成 001–008 fresh、008→009、
+  least privilege、bootstrap token、非空 backup、隔离 exact restore 和 restart。

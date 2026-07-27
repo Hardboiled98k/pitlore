@@ -12,9 +12,9 @@ PitLore 已形成三层可运行工程基线：本地 Lesson 闭环、Git-first 
 上限继续收紧，并补齐了隐私安全、有界的真实 Pack semantic version diff，以及只从
 已验证 release artifact 派生的 public Pack discovery facets v1。
 
-2026-07-27 用户决定不再参加黑客松，项目转为边开源边持续开发。按 D-016，连续
-7 天 dogfood 与 current-catalog 人工 evidence 保留为非阻塞产品质量信号，不再阻塞
-源码开源、日常开发、版本发布或 Phase 推进；人审和 evidence 完整性边界不变。
+项目已转为持续、公开的开源产品开发。按 D-018，固定周期 dogfood 收口已经移除；
+独立用户安装、跨真实任务重复使用和 current-catalog 人工 evidence 作为长期产品质量
+信号持续记录，不阻塞源码开源、日常开发或版本推进；人审和 evidence 完整性边界不变。
 
 “工程基线可运行”仍不等于真实采用或生产就绪：当前没有 npm 发布或独立社区使用，
 也没有公网托管、真实 IdP/browser E2E、真实支付和生产运维证据。GitHub 源码仓库已从
@@ -25,27 +25,29 @@ private archive，不属于公共 Git 历史。公开仓库本身不能冒充社
 
 | 字段             | 2026-07-27 本地已核验值                                                                                                 |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| 产品             | PitLore `0.1.0`；Apache-2.0；Node.js 20+ / TypeScript                                                                   |
+| 产品             | PitLore `0.1.0`；Apache-2.0；Node.js 22+ / TypeScript；consumer CI 已配置覆盖 Node.js 22/24 LTS                         |
 | 仓库             | `Hardboiled98k/pitlore`，public；默认分支 `main`                                                                         |
 | 当前工程基线     | clean public import；包含 public discovery facets v1、migration `009` 与完整开源文档                                   |
-| CI 见证          | 导入前同一源码已通过 Ubuntu、Windows、PostgreSQL self-host；公开 `main` 以实时 GitHub Actions 为准                      |
-| 工作树           | 公共历史从单个 GitHub noreply import commit 开始；旧开发历史只保留在 private archive                                   |
+| CI 见证          | 公开 `main@9a1849b` 的 CI、CodeQL 全绿；当前安装链路变更仍需以提交后的 Actions 结果复核                                  |
+| 工作树           | 公共历史从 GitHub noreply clean import 开始；当前本地增加 Git/tarball consumer 安装门禁，旧开发历史只保留在 private archive |
 | 完整验证         | 当前工作树 `npm run verify`：43 files / **376 tests**，typecheck 和 build 通过                                         |
 | 自托管           | 真 PostgreSQL 17：`001`–`008` 历史 release → `009` → CLI reindex/幂等复跑/runtime 拒绝，以及 fresh restore/restart 全通过 |
 | 分页性能探针     | synthetic 100k releases：PostgreSQL keyset 取 101 行 lookahead，index 扫描约 102 行，约 0.57 ms；只是工程证据           |
-| Demo / 发布包    | tenant Demo 通过；package smoke 通过；当前 tarball dry-run ≈ 510 KB / 2.50 MB unpacked / 233 files                    |
-| 依赖审计         | production tree = 0；high/critical build gate 通过；MCP SDK → `@hono/node-server` 仍有 2 个 moderate，未 force/downgrade |
-| 本地 lore        | 当前 105 条：60 approved，45 candidate；29 条有 current advisory，16 条未 advisory review；均未由 agent 批准           |
+| Demo / 发布包    | tenant Demo 通过；tarball `--ignore-scripts`、普通 npm exec/全局安装与隔离 Git dependency smoke 均通过；约 0.52 MB / 2.53 MB / 242 files |
+| npm 发布自动化   | 仅手动 tag-ref workflow 已实现同一 artifact/SHA/六组合 consumer/OIDC 门禁；尚未运行，npm 包名、environment 与 trusted publisher 仍待维护者配置 |
+| 仓库保护         | live `main` 禁止 force-push/delete，但 required checks/reviews、admin enforcement、signatures 均未启用且 ruleset 为空；社区协作前仍需配置 |
+| 依赖审计         | production tree = 0；high/critical gate 通过；286 个 lock artifact 均为 npm 官方 registry；MCP bundle notice 正文有 SHA-256 门禁；audit 汇总的 2 个 dev-only Hono moderate 已在所装 1.19.17 修复，且 adapter 不进入 MCP bundle |
+| 本地 lore        | 当前 113 条：60 approved，53 candidate；29 条有 current advisory，24 条未 advisory review；均未由 agent 批准           |
 | Evidence current | `catalog_hash=637418aa…`；0 events；usefulness/precision/recall 均为 unknown (`null`)                                   |
 | Evidence all     | 跨 2 个 catalog 共 8 条 real；retrieve 5，useful 2，precision 2/7，recall 2/3；detector 3 条全为历史 FP                 |
-| PitLore check    | semantic diff 与 discovery core/Web 的 production source 定向扫描均为 0 findings；未写 agent 自评 evidence             |
+| PitLore check    | semantic diff、discovery 与本轮安装、发行及社区入口 source/config 定向扫描均为 0 findings；本轮 hash `637418aa…`，未写 agent 自评 evidence |
 
 ## 新会话恢复顺序
 
 1. 读本文件，然后运行 `git status -sb`、`git log --oneline -5`、
    `gh repo view Hardboiled98k/pitlore` 和 `gh run list --branch main`。
-2. 改变信任/阶段边界前读 [DECISIONS.md](./DECISIONS.md)；D-016 已将 7 天观察降为
-   非阻塞质量信号，不取消 D-003 人审边界和 D-011 证据口径。
+2. 改变信任/阶段边界前读 [DECISIONS.md](./DECISIONS.md)；D-018 已移除固定周期收口，
+   不取消 D-003 人审边界和 D-011 证据口径。
 3. 完整产品目标读 [PRD.md](./PRD.md)；已交付事实以本文件和实时代码为准。
 4. 非平凡实现前 retrieve，完成前 check；真实 bug 只记 private candidate，agent 不得
    approve，也不得给自己的 usefulness/detector 结果打分。
@@ -68,14 +70,13 @@ private archive，不属于公共 Git 历史。公开仓库本身不能冒充社
 
 ### 尚未满足的非阻塞产品质量信号
 
-- 初始 `2026-07-16`–`2026-07-22` 窗口只有 4 个真实活跃日（7/16、17、18、22），
-  最长连续 3 天；该历史窗口未达到 7 天观察目标。
 - current catalog 没有任何人工 evidence；历史 8 条不能代表当前 detector 0.2.0
   或当前 approved catalog 质量。
 - 新 candidate 仍待独立人审；advisory review 不能冒充生命周期授权。
-- 7/22 的 retrieve/check/remember 是真实工程调用，但没有人的 usefulness/detector
+- 历史 retrieve/check/remember 是真实工程调用，但缺少足量人的 usefulness/detector
   判断，因此未写 evidence record。
-- 以上缺口必须如实披露，但不再作为开源、开发、release 或 Phase 推进门槛；工程测试
+- 尚无独立外部用户的安装、跨任务重复使用或贡献证据。
+- 以上缺口必须如实披露，但不是开源、开发或 release 门槛；工程测试
   也不能替代这些采用与人工效用事实。
 
 详情见 [DOGFOOD.md](./DOGFOOD.md)。
@@ -96,6 +97,15 @@ private archive，不属于公共 Git 历史。公开仓库本身不能冒充社
 - npm tarball 内 MCP runtime 直接 bundle SDK 而不要求安装 Hono，且带精确
   `THIRD_PARTY_NOTICES.md`；package smoke 会在无 SDK/Hono 的安装目录验证 MCP initialize
   和 `tools/list`。
+- Git dependency 通过 `prepare` 从不含 `dist/` 的源码构建发行内容；隔离 smoke 会创建
+  临时 Git 仓并验证安装后的真实 bin/version/help，防止 npm 零退出码掩盖缺失 CLI。
+- CI 只构建一次 npm tarball，并让 Ubuntu、macOS、Windows consumer 安装同一 artifact；
+  tarball 在 `--ignore-scripts` 下完成 CLI、MCP、init、retrieve/check 和治理闭环验证。
+- Package smoke 同时限制压缩包、展开 tar stream 和 entry 数，防止高压缩比异常内容
+  绕过仅针对 `.tgz` 字节数的门禁。
+- 独立 `npm-publish.yml` 只允许从手动选择的既有 release tag 运行；tag/ref/package
+  version、main ancestry、package identity 和 SHA-256 必须一致，只有最后的受保护 job
+  获得 OIDC 权限。workflow 尚未实际运行，也未配置 npm/GitHub 外部发布设置。
 
 ### 仍缺真实采用
 
@@ -170,18 +180,20 @@ private archive，不属于公共 Git 历史。公开仓库本身不能冒充社
 ## 当前验证命令
 
 ```text
-npm run verify                 # 43 files / 373 tests + typecheck + build
+npm run verify                 # 43 files / 376 tests + typecheck + build
 npm run demo:tenant            # passed
-npm run test:package           # passed; tarball MCP initialize/tools-list smoke
+npm run test:install           # passed; tarball + isolated Git dependency consumer smokes
 npm run test:self-host         # passed; 008→009 reindex + fresh restore/restart on PostgreSQL 17
 npm run audit:prod             # 0 vulnerabilities
 npm run audit:build            # 2 moderate dev-only Hono findings; no high/critical
-npm pack --dry-run --json --ignore-scripts  # approximately 510 KB / 2.50 MB unpacked / 233 files
+npm pack --dry-run --json      # runs prepare; inspect current size/file list (currently 242 files)
+npm publish --dry-run --json   # passed; lifecycle/install gates execute, registry unchanged
 docker compose config --quiet  # passed
 actionlint                     # passed
 shellcheck -e SC2016 ...       # passed
 git diff --check               # passed
-pitlore check <semantic-diff/discovery production files>  # 定向扫描 0 findings
+gitleaks dir . --redact        # no leaks
+pitlore check <changed sources> # 22 个安装/发行 source/config 定向扫描 0 findings
 ```
 
 ## 状态维护规则

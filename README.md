@@ -25,47 +25,92 @@ PitLore is:
 | **MCP / CLI** | Runtime tools every agent can call                                     |
 | **Hard path** | `pitlore check` / CI — not only soft prompts                           |
 
-See the [current project status](./docs/STATUS.md), [Phase 1 dogfood evidence](./docs/DOGFOOD.md),
+See the [current project status](./docs/STATUS.md), [adoption and dogfood evidence](./docs/DOGFOOD.md),
 [documentation map](./docs/README.md), and full product intent in
 [`docs/PRD.md`](./docs/PRD.md).
 
 ---
 
-## Quick start (source checkout)
+## Install and quick start
+
+PitLore requires Node.js 22+ and Git. Consumer CI is configured for the current
+Node.js 22 and 24 LTS lines; the public Actions run must pass before a release.
+
+### Install from GitHub
+
+Until the first npm registry release, install the public repository directly:
 
 ```bash
-# Node 20+
+cd your-project
+npm install --save-dev "git+https://github.com/Hardboiled98k/pitlore.git#main"
+npx --no-install pitlore --version
+npx --no-install pitlore init --name my-project
+npx --no-install pitlore retrieve -i "async array iteration" -l typescript
+```
+
+For a reproducible installation, replace `main` with an exact commit SHA or a release tag
+when one is available. A Git installation intentionally runs the repository's `prepare`
+build and therefore does not support `--ignore-scripts`; the packed npm artifact does.
+Global installation is supported for the packed tarball and future registry package, not
+for the Git dependency path.
+
+### Work from a source checkout
+
+```bash
+git clone https://github.com/Hardboiled98k/pitlore.git
+cd pitlore
 npm ci
-npm run build
 
 # Use the bundled seed lore (20+ classic L1/L2 lessons)
 npm run -s pitlore -- search async
 npm run -s pitlore -- retrieve -i "async array iteration" -l typescript
 
 # Scan demo fixtures
-npm run -s pitlore -- check demo/fixtures/bad-foreach-async.js
+npm run -s pitlore -- check demo/fixtures/bad-foreach-async.js || test "$?" -eq 2
 npm run -s pitlore -- check demo/fixtures/good-foreach-async.js   # clean
 
 # Initialize a writable lore in this project (copies seed)
-npm run -s pitlore -- init -n demo/lore
+npm run -s pitlore -- init --name demo-lore
 npm run -s pitlore -- distill -d "Forgot to await Promise.all in batch job" --id batch-promise-all
 npm run -s pitlore -- approve batch-promise-all
 ```
 
-After installing the npm tarball, its CLI uses the same commands through `npx pitlore`.
-The real install artifact is smoke-tested by `npm run test:package`; it includes a
-bundled MCP stdio runtime and does not depend on the repository's `src/`, `tsx`, existing
-`node_modules`, or a separately installed MCP SDK. This engineering snapshot has not
-been published to npm. PitLore is developed in public at
+`npm ci` runs the `prepare` build. To inspect the exact future npm artifact locally:
+
+```bash
+npm pack
+npm install --global ./pitlore-0.1.0.tgz
+pitlore --help
+```
+
+`npm run test:package` installs the packed artifact with scripts disabled, then also
+executes ordinary temporary `npm exec` and global-install CLI paths. The consumer CI is
+configured to run the same tarball on Ubuntu, macOS, and Windows; its public Actions result
+must be green before release. The artifact includes a bundled MCP stdio runtime and does
+not depend on the repository's `src/`, `tsx`, existing `node_modules`, or a separately
+installed MCP SDK. The package has not yet been published to the npm registry, so
+`npm install pitlore` and registry-backed `npx pitlore` are not available yet. PitLore is
+developed in public at
 [`Hardboiled98k/pitlore`](https://github.com/Hardboiled98k/pitlore). The source repository
 is public, while every local `.pitlore/` store, candidate, review, and evidence ledger
 remains private by default and is excluded from Git.
 
 For a team-owned lore in a separate private Git repository:
 
+POSIX shell:
+
 ```bash
 npm run -s pitlore -- init --path ../team-lore --name your-org/your-project
 PITLORE_LORE="$PWD/../team-lore" npm run -s pitlore -- search async
+```
+
+PowerShell uses the same CLI with its environment syntax:
+
+```powershell
+npm run -s pitlore -- init --path ../team-lore --name your-org/your-project
+$env:PITLORE_LORE = (Resolve-Path ../team-lore)
+npm run -s pitlore -- search async
+Remove-Item Env:PITLORE_LORE
 ```
 
 ---
@@ -93,8 +138,8 @@ PITLORE_LORE="$PWD/../team-lore" npm run -s pitlore -- search async
 | `pitlore install --frozen-lockfile`                                    | Verify every locked Pack and dependency without changing the lock                                                                          |
 | `pitlore uninstall <name>`                                             | Remove an unneeded Pack from the lock (fails if another Pack depends on it)                                                                |
 | `pitlore pack verify <path>`                                           | Validate public/approved policy, detector safety, fixtures, files, and canonical SHA-256                                                   |
-| `pitlore pack sign <path> --private-key <pem>`                         | Add an Ed25519 signature over the canonical Pack payload                                                                                   |
-| `pitlore pack list` / `pack verify-installed`                          | Inspect or fail-closed verify the effective Pack catalog                                                                                   |
+| `pitlore pack sign <path> --private-key <key.pem>`                     | Add an Ed25519 signature over the canonical Pack payload                                                                                   |
+| `pitlore pack list` / `pitlore pack verify-installed`                  | Inspect or fail-closed verify the effective Pack catalog                                                                                   |
 | `pitlore pack artifact export\|verify\|install …`                      | Move one canonical verified Pack through an air-gapped JSON artifact                                                                       |
 | `pitlore pack artifact bundle-export\|bundle-verify\|bundle-install …` | Move and atomically lock one root Pack's exact dependency closure                                                                          |
 | `pitlore registry search`                                              | Search anonymous public Registry Packs by name or verified `--language` / `--ecosystem` / `--tag` facets; `--facets` returns metadata       |
@@ -134,6 +179,8 @@ Environment:
 | `PITLORE_MODEL` / `OPENAI_MODEL`      | Model id (default `gpt-5.6`)                                                          |
 | `PITLORE_PACK_GIT_TIMEOUT_MS`         | Bound HTTPS Git clone time; 250–300000 ms (default 120000)                            |
 | `PITLORE_PACK_GIT_MAX_TRANSFER_BYTES` | Fail-closed disk-growth budget for the clone; 65536–1073741824 bytes (default 64 MiB) |
+| `PITLORE_REGISTRY_URL`                | Base URL for Registry HTTP clients such as search/install/sync unless `--url` is used |
+| `PITLORE_REGISTRY_TOKEN`              | Optional bearer token for protected Registry operations; never commit it              |
 
 ---
 
@@ -185,6 +232,10 @@ text equality rather than array overlap, so rare filters can use a B-tree withou
 tenant/public isolation. Reputation data and reputation-based ranking remain future product
 work.
 
+The following local secret setup is for a POSIX shell on macOS/Linux or WSL.
+Windows Docker Desktop users should run it inside WSL so the documented file-mode
+boundary is preserved.
+
 ```bash
 cp .env.example .env
 install -d -m 700 secrets
@@ -194,8 +245,10 @@ openssl rand -base64 48 | tr '+/' '-_' | tr -d '\n' > secrets/postgres-migrator-
 openssl rand -base64 48 | tr '+/' '-_' | tr -d '\n' > secrets/postgres-runtime-password
 chmod 644 secrets/postgres-*-password
 docker compose --env-file .env up -d --build --wait
-open http://127.0.0.1:8787
+curl -fsS http://127.0.0.1:8787/readyz
 ```
+
+Then open `http://127.0.0.1:8787` in a browser.
 
 Keep the `secrets/` directory at mode `0700`. Local Compose uses host bind mounts for
 file-backed secrets on Linux, so its non-root service users must be able to read the files;
@@ -227,17 +280,27 @@ discards raw Sentry event/user/stack content, and uses the local heuristic unles
 Start:
 
 ```bash
+# Project-local Git install
+npx --no-install pitlore serve
+
+# Source checkout
 npm run -s pitlore -- serve
-# or: node dist/cli.js serve --lore /path/to/.pitlore
+
+# Global packed tarball or future registry install
+pitlore serve
 ```
 
 This repository checks in project-scoped configs for both clients:
 
-- Claude Code reads [`.mcp.json`](./.mcp.json). On first use, review and approve the
-  project server in `/mcp`; repository config cannot approve itself.
-- Codex reads [`.codex/config.toml`](./.codex/config.toml) only after the project is
-  trusted. Approved-only retrieve/check/export tools are pre-approved; candidate-aware
-  search/get, candidate review, and the writing `pitlore_remember` keep prompting.
+- Claude Code reads
+  [`.mcp.json`](https://github.com/Hardboiled98k/pitlore/blob/main/.mcp.json).
+  On first use, review and approve the project server in `/mcp`; repository config
+  cannot approve itself.
+- Codex reads
+  [`.codex/config.toml`](https://github.com/Hardboiled98k/pitlore/blob/main/.codex/config.toml)
+  only after the project is trusted. Approved-only retrieve/check/export tools are
+  pre-approved; candidate-aware search/get, candidate review, and the writing
+  `pitlore_remember` keep prompting.
 
 Both configs use `npm run -s pitlore -- serve`, so run `npm ci` first. A writable
 project lore remains local under ignored `.pitlore/`.
@@ -249,7 +312,10 @@ Example Cursor / Claude MCP config fragment:
   "mcpServers": {
     "pitlore": {
       "command": "node",
-      "args": ["/absolute/path/to/pitlore/dist/cli.js", "serve"],
+      "args": [
+        "/absolute/path/to/your-project/node_modules/pitlore/dist/cli.js",
+        "serve"
+      ],
       "env": {
         "PITLORE_LORE": "/absolute/path/to/your/.pitlore"
       }
@@ -257,6 +323,25 @@ Example Cursor / Claude MCP config fragment:
   }
 }
 ```
+
+For a source checkout, replace the first argument with
+`/absolute/path/to/pitlore/dist/cli.js`. For a global packed/registry install, keep Node
+as `command` and use this complete shape:
+
+```json
+{
+  "command": "/absolute/path/to/node",
+  "args": [
+    "/absolute/global-node_modules/pitlore/dist/cli.js",
+    "serve"
+  ]
+}
+```
+
+Obtain the global module root with `npm root --global`. Resolve Node with
+`command -v node` on POSIX or `(Get-Command node).Source` in PowerShell. Desktop clients
+often do not inherit the shell's global `PATH`; using absolute paths avoids that and also
+avoids relying on Windows `.cmd` shims.
 
 ### Tools
 
@@ -444,12 +529,12 @@ or work across phases.
 npm ci
 npm run verify
 npm run demo:tenant
-npm run test:package
+npm run test:install
 # Disposable Docker fresh/backup/restore drill (requires Docker + Bash)
 npm run test:self-host
 ```
 
-At this local engineering snapshot, `npm test` covers 373 automated tests. The separate
+At this local engineering snapshot, `npm test` covers 376 automated tests. The separate
 self-host smoke exercises fresh install, upgrade, least-privilege runtime access,
 backup/restore, and restart across all nine migrations; these checks are not evidence of
 a production-hosted service or real external-provider operation.
@@ -458,10 +543,11 @@ a production-hosted service or real external-provider operation.
 
 ## Contributing and security
 
-Contributions are welcome. Start with [`CONTRIBUTING.md`](./CONTRIBUTING.md), and use the
-Pack-specific pull-request checklist for public Lesson or Pack changes. Never submit a
-local `.pitlore/`, private Lessons/reviews/evidence, credentials, PII, customer data, or
-proprietary source.
+Contributions are welcome. Start with [`CONTRIBUTING.md`](./CONTRIBUTING.md), use
+[`SUPPORT.md`](./SUPPORT.md) for the right public help channel, and copy the
+[Pack-specific pull-request checklist](https://github.com/Hardboiled98k/pitlore/blob/main/.github/PULL_REQUEST_TEMPLATE/pack.md)
+for public Lesson or Pack changes. Never submit a local `.pitlore/`, private
+Lessons/reviews/evidence, credentials, PII, customer data, or proprietary source.
 
 Report suspected vulnerabilities privately through the process in
 [`SECURITY.md`](./SECURITY.md), not through a public issue.
@@ -470,9 +556,7 @@ Report suspected vulnerabilities privately through the process in
 
 ## Built with Codex & GPT-5.6
 
-PitLore originated during preparation for **OpenAI Build Week**, but the project is no
-longer being developed as a hackathon submission. It now continues as an independent
-open-source developer tool:
+PitLore is developed as an independent open-source developer tool:
 
 - Core implementation and iteration via **Codex**
 - Lesson distillation path targets **GPT-5.6** when `OPENAI_API_KEY` is set
@@ -485,25 +569,28 @@ open-source developer tool:
 
 Apache-2.0 applies to this repository's code, documentation, and official public
 Lesson/Pack content. Each official Pack includes its own complete `LICENSE`. Third-party
-public Packs must carry their own applicable license terms.
+public Packs must carry their own applicable license terms. The generated MCP runtime's
+bundled dependencies and their permissive license texts are listed in
+[`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md).
 
 ---
 
 ## Status
 
-**Active engineering: Phase 1 dogfood, an implemented Phase 2 supply-chain baseline, and a
-Phase 3 self-hosted engineering baseline.** Core CLI/MCP, governance, immutable Packs,
+**Active engineering: a local Lesson loop, an implemented Pack supply-chain baseline, and
+a self-hosted Registry engineering baseline.** Core CLI/MCP, governance, immutable Packs,
 Registry/API/Web, tenant permissions, audit, usage, revocation, and local Docker Compose
-operation are implemented. Real week-long use, retrieval/detector precision, community
-adoption, and production integrations remain unproven product signals rather than test
-fixtures; under D-016, those gaps do not block open-source development or releases.
+operation are implemented. Independent external use, retrieval/detector precision,
+community adoption, and production integrations remain unproven product signals rather
+than test fixtures; those gaps do not block open-source development or releases.
 
 The dated verification evidence and next-session checklist live in
-[`docs/STATUS.md`](./docs/STATUS.md); daily Phase 1 evidence lives in
+[`docs/STATUS.md`](./docs/STATUS.md); ongoing adoption and dogfood evidence lives in
 [`docs/DOGFOOD.md`](./docs/DOGFOOD.md); durable rationale lives in
 [`docs/DECISIONS.md`](./docs/DECISIONS.md).
 
-Not yet proven or shipped externally: npm publication, community installs/contributions,
-a public hosted deployment, production browser SSO, real payment collection, real
-Sentry/CI provider credentials, reputation data, or compliance certification. Repository
-availability is an engineering delivery fact, not evidence of community adoption.
+Not yet proven or shipped externally: npm registry publication, independent community
+installs/contributions, a public hosted deployment, production browser SSO, real payment
+collection, real Sentry/CI provider credentials, reputation data, or compliance
+certification. Repository availability and isolated consumer smokes are engineering
+delivery facts, not evidence of community adoption.

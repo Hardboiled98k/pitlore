@@ -3,6 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import zlib from "node:zlib";
 
 const projectRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -12,24 +13,196 @@ const npmExecPath = process.env.npm_execpath;
 if (!npmExecPath) {
   throw new Error("npm_execpath is required to run the package smoke test");
 }
-const consumerRoot = fs.mkdtempSync(path.join(os.tmpdir(), "pitlore package-"));
+const consumerRoot = fs.realpathSync(
+  fs.mkdtempSync(path.join(os.tmpdir(), "pitlore package-")),
+);
+const npxRoot = fs.realpathSync(
+  fs.mkdtempSync(path.join(os.tmpdir(), "pitlore npx-")),
+);
+const globalRoot = path.join(consumerRoot, "global");
 
-function runNpm(args, options) {
-  return execFileSync(process.execPath, [npmExecPath, ...args], options);
+function isolatedNpmEnv(overrides = {}) {
+  const env = { ...process.env, ...overrides };
+  for (const key of Object.keys(env)) {
+    const normalized = key.toLowerCase();
+    if (
+      normalized === "init_cwd" ||
+      normalized === "npm_command" ||
+      normalized === "npm_execpath" ||
+      normalized === "npm_lifecycle_event" ||
+      normalized === "npm_lifecycle_script" ||
+      normalized === "npm_node_execpath" ||
+      normalized === "npm_config_global_prefix" ||
+      normalized === "npm_config_local_prefix" ||
+      normalized === "npm_config_prefix" ||
+      normalized.startsWith("npm_package_")
+    ) {
+      delete env[key];
+    }
+  }
+  return env;
+}
+
+function runNpm(args, options = {}) {
+  // `npm publish --dry-run --json` propagates both settings into lifecycle
+  // scripts. npm lifecycle path/package variables must also not make the
+  // disposable consumer inherit this repository as its local project.
+  const { env, ...execOptions } = options;
+  return execFileSync(
+    process.execPath,
+    [npmExecPath, "--dry-run=false", "--json=false", ...args],
+    {
+      ...execOptions,
+      env: isolatedNpmEnv(env),
+    },
+  );
+}
+
+function resolveSuppliedArchive(input) {
+  const supplied = path.resolve(projectRoot, input);
+  const stat = fs.statSync(supplied);
+  if (stat.isFile()) return supplied;
+  if (!stat.isDirectory()) {
+    throw new Error(`package smoke input is not a file or directory: ${input}`);
+  }
+
+  const archives = fs
+    .readdirSync(supplied)
+    .filter((name) => name.endsWith(".tgz"));
+  if (archives.length !== 1) {
+    throw new Error(
+      `package smoke directory must contain exactly one .tgz file: ${input}`,
+    );
+  }
+  return path.join(supplied, archives[0]);
+}
+
+function inspectArchive(archive) {
+  const compressed = fs.readFileSync(archive);
+  let tar;
+  try {
+    tar = zlib.gunzipSync(compressed, { maxOutputLength: 10_000_000 });
+  } catch (error) {
+    throw new Error(
+      "packed artifact is invalid or expands beyond the 10 MB safety limit",
+      { cause: error },
+    );
+  }
+
+  let entryCount = 0;
+  let offset = 0;
+  while (offset + 512 <= tar.length) {
+    const header = tar.subarray(offset, offset + 512);
+    if (header.every((byte) => byte === 0)) break;
+
+    const rawSize = header
+      .subarray(124, 136)
+      .toString("ascii")
+      .replace(/\0.*$/u, "")
+      .trim();
+    if (rawSize && !/^[0-7]+$/u.test(rawSize)) {
+      throw new Error("packed artifact contains an unsupported tar size field");
+    }
+    const entrySize = rawSize ? Number.parseInt(rawSize, 8) : 0;
+    if (!Number.isSafeInteger(entrySize) || entrySize < 0) {
+      throw new Error("packed artifact contains an invalid tar entry size");
+    }
+
+    entryCount += 1;
+    if (entryCount > 500) {
+      throw new Error("packed artifact unexpectedly contains more than 500 entries");
+    }
+    offset += 512 + Math.ceil(entrySize / 512) * 512;
+  }
+
+  if (entryCount === 0 || offset > tar.length) {
+    throw new Error("packed artifact does not contain a valid non-empty tar archive");
+  }
+  return { entryCount, tarSize: tar.length };
+}
+
+function validateInstalledMarkdownLinks(packageRoot) {
+  const markdownFiles = [];
+  const pending = [packageRoot];
+  while (pending.length > 0) {
+    const current = pending.pop();
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      const entryPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        pending.push(entryPath);
+      } else if (entry.isFile() && entry.name.endsWith(".md")) {
+        markdownFiles.push(entryPath);
+      }
+    }
+  }
+
+  for (const markdownFile of markdownFiles) {
+    const markdown = fs.readFileSync(markdownFile, "utf8");
+    for (const match of markdown.matchAll(/\]\(([^)\r\n]+)\)/gu)) {
+      let target = match[1].trim();
+      if (target.startsWith("<") && target.endsWith(">")) {
+        target = target.slice(1, -1);
+      } else {
+        target = target.split(/\s+["']/u, 1)[0];
+      }
+      if (
+        !target ||
+        target.startsWith("#") ||
+        target.startsWith("/") ||
+        /^[a-z][a-z0-9+.-]*:/iu.test(target)
+      ) {
+        continue;
+      }
+
+      const withoutAnchor = target.split(/[?#]/u, 1)[0];
+      let decoded;
+      try {
+        decoded = decodeURIComponent(withoutAnchor);
+      } catch (error) {
+        throw new Error(
+          `packaged Markdown contains an invalid relative URL in ${path.relative(
+            packageRoot,
+            markdownFile,
+          )}: ${target}`,
+          { cause: error },
+        );
+      }
+      const resolved = path.resolve(path.dirname(markdownFile), decoded);
+      if (
+        (resolved !== packageRoot &&
+          !resolved.startsWith(`${packageRoot}${path.sep}`)) ||
+        !fs.existsSync(resolved)
+      ) {
+        throw new Error(
+          `packaged Markdown link does not resolve inside the artifact: ${path.relative(
+            packageRoot,
+            markdownFile,
+          )} -> ${target}`,
+        );
+      }
+    }
+  }
 }
 
 try {
-  const packOutput = runNpm(
-    ["pack", "--pack-destination", consumerRoot, "--silent"],
-    { cwd: projectRoot, encoding: "utf8" },
-  );
-  const archiveName = packOutput.trim().split(/\r?\n/).at(-1);
-  if (!archiveName) throw new Error("npm pack did not return an archive name");
-
-  const archive = path.join(consumerRoot, archiveName);
-  if (fs.statSync(archive).size > 2_000_000) {
-    throw new Error("packed artifact unexpectedly exceeds 2 MB");
+  let archive;
+  if (process.argv[2]) {
+    archive = resolveSuppliedArchive(process.argv[2]);
+  } else {
+    const packOutput = runNpm(
+      ["pack", "--pack-destination", consumerRoot, "--silent"],
+      { cwd: projectRoot, encoding: "utf8" },
+    );
+    const packedName = packOutput.trim().split(/\r?\n/).at(-1);
+    if (!packedName) throw new Error("npm pack did not return an archive name");
+    archive = path.join(consumerRoot, packedName);
   }
+  const archiveName = path.basename(archive);
+  const archiveSize = fs.statSync(archive).size;
+  if (archiveSize === 0 || archiveSize > 2_000_000) {
+    throw new Error("packed artifact is empty or unexpectedly exceeds 2 MB");
+  }
+  const archiveInspection = inspectArchive(archive);
   fs.writeFileSync(
     path.join(consumerRoot, "package.json"),
     JSON.stringify({
@@ -47,7 +220,6 @@ try {
       "--no-audit",
       "--no-fund",
       archive,
-      "zod@3.25.28",
     ],
     { cwd: consumerRoot, stdio: "pipe" },
   );
@@ -56,6 +228,7 @@ try {
   const installedManifest = JSON.parse(
     fs.readFileSync(path.join(installedRoot, "package.json"), "utf8"),
   );
+  validateInstalledMarkdownLinks(installedRoot);
   const declarationsReferenceSdk = fs
     .readdirSync(path.join(installedRoot, "dist"))
     .filter((name) => name.endsWith(".d.ts"))
@@ -117,6 +290,14 @@ try {
     .map((line) => JSON.parse(line));
 
   const help = runCli(["--help"], {
+    cwd: consumerRoot,
+    encoding: "utf8",
+  });
+  const version = runCli(["--version"], {
+    cwd: consumerRoot,
+    encoding: "utf8",
+  });
+  const initialized = runCli(["init", "--name", "package-smoke"], {
     cwd: consumerRoot,
     encoding: "utf8",
   });
@@ -297,6 +478,82 @@ try {
     cwd: consumerRoot,
     encoding: "utf8",
   });
+  runNpm(
+    [
+      "install",
+      "--global",
+      "--prefix",
+      globalRoot,
+      "--no-audit",
+      "--no-fund",
+      "--package-lock=false",
+      archive,
+    ],
+    { cwd: consumerRoot, stdio: "pipe" },
+  );
+  const globalInstalledRoot =
+    process.platform === "win32"
+      ? path.join(globalRoot, "node_modules", "pitlore")
+      : path.join(globalRoot, "lib", "node_modules", "pitlore");
+  const globalCliEntry = path.join(globalInstalledRoot, "dist", "cli.js");
+  const globalBinary =
+    process.platform === "win32"
+      ? path.join(globalRoot, "pitlore.cmd")
+      : path.join(globalRoot, "bin", "pitlore");
+  const globalVersion =
+    process.platform === "win32"
+      ? execFileSync(
+          process.env.ComSpec ?? "cmd.exe",
+          ["/d", "/s", "/c", `"${globalBinary}" --version`],
+          {
+            cwd: consumerRoot,
+            encoding: "utf8",
+          },
+        )
+      : execFileSync(globalBinary, ["--version"], {
+          cwd: consumerRoot,
+          encoding: "utf8",
+        });
+  fs.writeFileSync(
+    path.join(npxRoot, "package.json"),
+    JSON.stringify({ private: true }),
+    "utf8",
+  );
+  const npxVersion = runNpm(
+    [
+      "exec",
+      "--yes",
+      "--package",
+      archive,
+      "--",
+      "pitlore",
+      "--version",
+    ],
+    { cwd: npxRoot, encoding: "utf8" },
+  );
+  runNpm(
+    [
+      "install",
+      "--prefix",
+      consumerRoot,
+      "--ignore-scripts",
+      "--no-audit",
+      "--no-fund",
+      "--no-save",
+      "zod@3.25.28",
+    ],
+    { cwd: consumerRoot, stdio: "pipe" },
+  );
+  const minimumZodVersion = JSON.parse(
+    fs.readFileSync(
+      path.join(consumerRoot, "node_modules", "zod", "package.json"),
+      "utf8",
+    ),
+  ).version;
+  const minimumZodHelp = runCli(["--help"], {
+    cwd: consumerRoot,
+    encoding: "utf8",
+  });
 
   if (
     !installedBinHelp.includes("PitLore") ||
@@ -315,6 +572,8 @@ try {
     mcpProbe.status !== 0 ||
     mcpMessages.find((message) => message.id === 1)?.result?.serverInfo?.name !==
       "pitlore" ||
+    mcpMessages.find((message) => message.id === 1)?.result?.serverInfo
+      ?.version !== installedManifest.version ||
     !mcpMessages
       .find((message) => message.id === 2)
       ?.result?.tools?.some((tool) => tool.name === "pitlore_retrieve") ||
@@ -324,6 +583,11 @@ try {
     !help.includes("reject") ||
     !help.includes("deprecate") ||
     !help.includes("evidence") ||
+    version.trim() !== installedManifest.version ||
+    !initialized.includes("Initialized PitLore") ||
+    !fs.existsSync(
+      path.join(consumerRoot, ".pitlore", "manifest.yaml"),
+    ) ||
     !search.includes("lesson(s)") ||
     !reviewQueue.includes("No candidate lessons") ||
     !rejected.includes("Rejected package-reject-candidate") ||
@@ -348,9 +612,19 @@ try {
     blocked.status !== 2 ||
     !blocked.stdout.includes("observed_catalog_hash") ||
     !blocked.stdout.includes("js-foreach-async-await-miss") ||
+    globalVersion.trim() !== installedManifest.version ||
+    npxVersion.trim() !== installedManifest.version ||
+    !fs.existsSync(globalBinary) ||
+    !fs.existsSync(globalCliEntry) ||
+    minimumZodVersion !== "3.25.28" ||
+    !minimumZodHelp.includes("PitLore") ||
     !fs.existsSync(binary) ||
     !fs.existsSync(cliEntry) ||
     !fs.existsSync(path.join(installedRoot, "LICENSE")) ||
+    !fs.existsSync(path.join(installedRoot, "CHANGELOG.md")) ||
+    !fs.existsSync(path.join(installedRoot, "CONTRIBUTING.md")) ||
+    !fs.existsSync(path.join(installedRoot, "SECURITY.md")) ||
+    !fs.existsSync(path.join(installedRoot, "SUPPORT.md")) ||
     !fs.existsSync(path.join(installedRoot, "THIRD_PARTY_NOTICES.md")) ||
     !fs.existsSync(
       path.join(installedRoot, "packs", "node-reliability", "manifest.yaml"),
@@ -358,7 +632,10 @@ try {
   ) {
     throw new Error("installed package did not expose a working CLI and seed lore");
   }
-  console.log(`Package smoke passed: ${archiveName}`);
+  console.log(
+    `Package smoke passed: ${archiveName} (${archiveInspection.entryCount} tar entries, ${archiveInspection.tarSize} expanded bytes)`,
+  );
 } finally {
   fs.rmSync(consumerRoot, { recursive: true, force: true });
+  fs.rmSync(npxRoot, { recursive: true, force: true });
 }

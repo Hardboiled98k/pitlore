@@ -1,0 +1,231 @@
+name: npm Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing vX.Y.Z tag selected as this workflow ref
+        required: true
+        type: string
+      publish_npm:
+        description: Publish after all same-artifact checks pass
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: npm-publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      commit: ${{ steps.release.outputs.commit }}
+      sha256: ${{ steps.artifact.outputs.sha256 }}
+      tag: ${{ steps.release.outputs.tag }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - name: Validate immutable release ref
+        id: release
+        env:
+          PITLORE_GITHUB_SHA: ${{ github.sha }}
+          PITLORE_REF_NAME: ${{ github.ref_name }}
+          PITLORE_REF_PROTECTED: ${{ github.ref_protected }}
+          PITLORE_REF_TYPE: ${{ github.ref_type }}
+          PITLORE_REQUESTED_TAG: ${{ inputs.tag }}
+        run: node scripts/validate-release-ref.mjs
+      - run: npm ci --ignore-scripts
+      - run: mkdir -p package-artifact
+      - run: npm pack --pack-destination package-artifact --silent
+      - name: Verify package identity and record SHA-256
+        id: artifact
+        env:
+          PITLORE_RELEASE_ARTIFACT: package-artifact
+          PITLORE_RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          PITLORE_RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: node scripts/verify-release-artifact.mjs
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: pitlore-npm-release
+          path: package-artifact/*.tgz
+          if-no-files-found: error
+          retention-days: 7
+
+  verify-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - run: npm ci
+      - run: npm run verify
+      - run: npm run demo:tenant
+      - run: npm run audit:prod
+      - run: npm run audit:build
+
+  self-host:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - run: npm run test:self-host
+
+  consumer-install:
+    needs: build-package
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+        node:
+          - 22
+          - 24
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ needs.build-package.outputs.commit }}
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: ${{ matrix.node }}
+          package-manager-cache: false
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: pitlore-npm-release
+          path: package-artifact
+      - name: Verify downloaded artifact identity and SHA-256
+        env:
+          PITLORE_RELEASE_ARTIFACT: package-artifact
+          PITLORE_REQUIRE_SHA256: "true"
+          PITLORE_RELEASE_SHA256: ${{ needs.build-package.outputs.sha256 }}
+          PITLORE_RELEASE_TAG: ${{ needs.build-package.outputs.tag }}
+          PITLORE_RELEASE_VERSION: ${{ needs.build-package.outputs.version }}
+        run: node scripts/verify-release-artifact.mjs
+      - run: npm run test:package -- package-artifact
+      - run: npm run test:git-install
+
+  release-candidate:
+    needs:
+      - build-package
+      - consumer-install
+      - self-host
+      - verify-source
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ needs.build-package.outputs.commit }}
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - name: Pin trusted-publishing-capable npm
+        run: |
+          npm install --global npm@11.18.0 --ignore-scripts --no-audit --no-fund --registry=https://registry.npmjs.org
+          test "$(npm --version)" = "11.18.0"
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: pitlore-npm-release
+          path: package-artifact
+      - name: Reverify exact release candidate
+        env:
+          PITLORE_RELEASE_ARTIFACT: package-artifact
+          PITLORE_REQUIRE_SHA256: "true"
+          PITLORE_RELEASE_SHA256: ${{ needs.build-package.outputs.sha256 }}
+          PITLORE_RELEASE_TAG: ${{ needs.build-package.outputs.tag }}
+          PITLORE_RELEASE_VERSION: ${{ needs.build-package.outputs.version }}
+        run: node scripts/verify-release-artifact.mjs
+      - name: Exercise npm publication without changing registry state
+        env:
+          PITLORE_RELEASE_ARCHIVE: package-artifact/pitlore-${{ needs.build-package.outputs.version }}.tgz
+        run: npm publish "$PITLORE_RELEASE_ARCHIVE" --dry-run --access public --registry=https://registry.npmjs.org
+      - name: Refuse an already published version or an ambiguous registry failure
+        env:
+          PITLORE_RELEASE_VERSION: ${{ needs.build-package.outputs.version }}
+        run: |
+          set +e
+          PITLORE_VIEW_OUTPUT=$(npm view "pitlore@$PITLORE_RELEASE_VERSION" version --registry=https://registry.npmjs.org 2>&1)
+          PITLORE_VIEW_CODE=$?
+          set -e
+          if [ "$PITLORE_VIEW_CODE" -eq 0 ]; then
+            echo "pitlore@$PITLORE_RELEASE_VERSION already exists" >&2
+            exit 1
+          fi
+          if ! grep -q "E404" <<<"$PITLORE_VIEW_OUTPUT"; then
+            echo "$PITLORE_VIEW_OUTPUT" >&2
+            exit "$PITLORE_VIEW_CODE"
+          fi
+
+  publish-npm:
+    if: inputs.publish_npm
+    needs:
+      - build-package
+      - release-candidate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: npm-publish
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ needs.build-package.outputs.commit }}
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - name: Pin trusted-publishing-capable npm
+        run: |
+          npm install --global npm@11.18.0 --ignore-scripts --no-audit --no-fund --registry=https://registry.npmjs.org
+          test "$(npm --version)" = "11.18.0"
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: pitlore-npm-release
+          path: package-artifact
+      - name: Reverify exact artifact before publication
+        env:
+          PITLORE_RELEASE_ARTIFACT: package-artifact
+          PITLORE_REQUIRE_SHA256: "true"
+          PITLORE_RELEASE_SHA256: ${{ needs.build-package.outputs.sha256 }}
+          PITLORE_RELEASE_TAG: ${{ needs.build-package.outputs.tag }}
+          PITLORE_RELEASE_VERSION: ${{ needs.build-package.outputs.version }}
+        run: node scripts/verify-release-artifact.mjs
+      - name: Publish with npm trusted publishing
+        env:
+          PITLORE_RELEASE_ARCHIVE: package-artifact/pitlore-${{ needs.build-package.outputs.version }}.tgz
+        run: npm publish "$PITLORE_RELEASE_ARCHIVE" --access public --registry=https://registry.npmjs.org
