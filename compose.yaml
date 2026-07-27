@@ -1,0 +1,112 @@
+services:
+  postgres:
+    image: postgres:17-alpine@sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: pitlore
+      POSTGRES_USER: pitlore_admin
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_admin_password
+    healthcheck:
+      # Probe the final TCP listener, not the socket-only temporary server used
+      # by the official image while init scripts are still running.
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "pitlore_admin", "-d", "pitlore"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - pitlore-postgres:/var/lib/postgresql/data
+      - ./docker/postgres/init-roles.sh:/docker-entrypoint-initdb.d/10-pitlore-roles.sh:ro
+    secrets:
+      - postgres_admin_password
+      - postgres_migrator_password
+      - postgres_runtime_password
+    networks:
+      - db
+    security_opt:
+      - no-new-privileges:true
+
+  migrate:
+    build:
+      context: .
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["node", "dist/cli.js", "registry", "migrate"]
+    environment:
+      PITLORE_REGISTRY_DATABASE_HOST: postgres
+      PITLORE_REGISTRY_DATABASE_PORT: "5432"
+      PITLORE_REGISTRY_DATABASE_NAME: pitlore
+      PITLORE_REGISTRY_DATABASE_USER: pitlore_migrator
+      PITLORE_REGISTRY_DATABASE_PASSWORD_FILE: /run/secrets/postgres_migrator_password
+      PITLORE_REGISTRY_DATABASE_SSL: disable
+      PITLORE_REGISTRY_RUNTIME_ROLE: pitlore_runtime
+    secrets:
+      - postgres_migrator_password
+    networks:
+      - db
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+  registry:
+    build:
+      context: .
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      PITLORE_REGISTRY_DATABASE_HOST: postgres
+      PITLORE_REGISTRY_DATABASE_PORT: "5432"
+      PITLORE_REGISTRY_DATABASE_NAME: pitlore
+      PITLORE_REGISTRY_DATABASE_USER: pitlore_runtime
+      PITLORE_REGISTRY_DATABASE_PASSWORD_FILE: /run/secrets/postgres_runtime_password
+      PITLORE_REGISTRY_DATABASE_SSL: disable
+      PITLORE_TRUST_PROXY: ${PITLORE_TRUST_PROXY:-}
+      PITLORE_OIDC_PROVIDER: ${PITLORE_OIDC_PROVIDER:-}
+      PITLORE_OIDC_ISSUER: ${PITLORE_OIDC_ISSUER:-}
+      PITLORE_OIDC_AUDIENCE: ${PITLORE_OIDC_AUDIENCE:-}
+      PITLORE_OIDC_ALGORITHMS: ${PITLORE_OIDC_ALGORITHMS:-}
+      PITLORE_OIDC_JWKS_URL: ${PITLORE_OIDC_JWKS_URL:-}
+      PITLORE_OIDC_TENANT_CLAIM: ${PITLORE_OIDC_TENANT_CLAIM:-org_id}
+      PITLORE_BROWSER_AUTH_AUTHORIZE_URL: ${PITLORE_BROWSER_AUTH_AUTHORIZE_URL:-}
+      PITLORE_BROWSER_AUTH_TOKEN_URL: ${PITLORE_BROWSER_AUTH_TOKEN_URL:-}
+      PITLORE_BROWSER_AUTH_CLIENT_ID: ${PITLORE_BROWSER_AUTH_CLIENT_ID:-}
+      PITLORE_BROWSER_AUTH_REDIRECT_URI: ${PITLORE_BROWSER_AUTH_REDIRECT_URI:-}
+      PITLORE_BILLING_MODE: ${PITLORE_BILLING_MODE:-off}
+      PITLORE_BILLING_PROVIDER: ${PITLORE_BILLING_PROVIDER:-}
+    secrets:
+      - postgres_runtime_password
+    ports:
+      - "${PITLORE_REGISTRY_BIND_ADDRESS:-127.0.0.1}:${PITLORE_REGISTRY_PORT:-8787}:8787"
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - edge
+      - db
+
+volumes:
+  pitlore-postgres:
+
+secrets:
+  postgres_admin_password:
+    file: ${PITLORE_POSTGRES_ADMIN_PASSWORD_FILE:-./secrets/postgres-admin-password}
+  postgres_migrator_password:
+    file: ${PITLORE_POSTGRES_MIGRATOR_PASSWORD_FILE:-./secrets/postgres-migrator-password}
+  postgres_runtime_password:
+    file: ${PITLORE_POSTGRES_RUNTIME_PASSWORD_FILE:-./secrets/postgres-runtime-password}
+
+networks:
+  edge:
+  db:
+    internal: true

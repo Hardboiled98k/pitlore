@@ -1,0 +1,33 @@
+id: test-only-happy-path
+version: 0.1.0
+title: "Only happy-path tests for critical flows"
+languages:
+  - javascript
+  - typescript
+  - python
+  - go
+ecosystems:
+  []
+category: quality
+symptom: "Regressions on error paths ship unnoticed"
+root_cause: "Tests assert success only; no invalid input or failure injection"
+forbid_pattern_abstract: "Shipping critical modules with only success-case tests"
+safe_pattern_abstract: "Add at least one failure-path and one edge-case test per critical flow"
+scope:
+  paths: []
+severity: info
+confidence: 0.65
+sources:
+  count: 1
+  references: []
+enforcement:
+  test_idea: "Coverage gate on error branches for auth/payment modules"
+  detector_ref: null
+  patterns:
+    []
+tags:
+  - testing
+status: approved
+visibility: public
+created_at: "2026-07-15T00:00:00.000Z"
+updated_at: "2026-07-15T00:00:00.000Z"

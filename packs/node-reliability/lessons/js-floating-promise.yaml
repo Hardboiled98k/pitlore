@@ -1,0 +1,32 @@
+id: js-floating-promise
+version: 0.1.0
+title: "Floating promises without catch or await"
+languages:
+  - javascript
+  - typescript
+ecosystems:
+  - node
+category: concurrency
+symptom: "Unhandled rejections or silent failure of background async work"
+root_cause: "Promises are created but neither awaited nor given .catch / void with explicit fire-and-forget policy"
+forbid_pattern_abstract: "Calling an async function without await, return, or explicit void+catch when errors matter"
+safe_pattern_abstract: "await the call, return the promise, or void promise.catch(handler) with a documented reason"
+scope:
+  paths: []
+severity: warn
+confidence: 0.75
+sources:
+  count: 1
+  references: []
+enforcement:
+  test_idea: "Enable @typescript-eslint/no-floating-promises and fix violations"
+  detector_ref: null
+  patterns:
+    - "^\\s*[a-zA-Z0-9_$.]+\\([^;]*\\);\\s*//\\s*TODO.*promise"
+tags:
+  - async
+  - promises
+status: approved
+visibility: public
+created_at: "2026-07-15T00:00:00.000Z"
+updated_at: "2026-07-15T00:00:00.000Z"

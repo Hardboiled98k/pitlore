@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "pitlore": {
+      "type": "stdio",
+      "command": "npm",
+      "args": [
+        "run",
+        "-s",
+        "pitlore",
+        "--",
+        "serve"
+      ],
+      "env": {}
+    }
+  }
+}

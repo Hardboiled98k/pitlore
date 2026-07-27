@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.pitlore/
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
+secrets/
+coverage/
+operator-artifacts/
+bootstrap-token*.json
+*.dump
+*.dump.sha256

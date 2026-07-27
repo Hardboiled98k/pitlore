@@ -1,0 +1,15 @@
+.git
+.github
+.pitlore
+coverage
+dist
+node_modules
+secrets
+operator-artifacts
+bootstrap-token*.json
+*.dump
+*.dump.sha256
+*.log
+.env
+.env.*
+!.env.example

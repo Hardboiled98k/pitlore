@@ -1,0 +1,33 @@
+id: js-foreach-async-await-miss
+version: 0.1.0
+title: "forEach does not await async callbacks"
+languages:
+  - javascript
+  - typescript
+ecosystems:
+  - node
+  - browser
+category: concurrency
+symptom: "Async work inside array.forEach finishes after the function already returned"
+root_cause: "Array.forEach ignores the return value of the callback; Promises are not awaited."
+forbid_pattern_abstract: "Using forEach with an async callback and expecting all async work to complete before continuing"
+safe_pattern_abstract: "Use for...of with await, or Promise.all(items.map(async ...))"
+scope:
+  paths: []
+severity: block
+confidence: 0.95
+sources:
+  count: 1
+  references: []
+enforcement:
+  test_idea: "Assert that all side effects complete before the outer function resolves"
+  detector_ref: null
+  patterns:
+    - "\\.forEach\\s*\\(\\s*async\\s*\\("
+tags:
+  - async
+  - arrays
+status: approved
+visibility: public
+created_at: "2026-07-15T00:00:00.000Z"
+updated_at: "2026-07-15T00:00:00.000Z"

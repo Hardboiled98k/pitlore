@@ -1,0 +1,5 @@
+name: pitlore/seed
+description: Bundled L1/L2 lessons — classic language and framework pits.
+visibility: public
+version: 0.1.0
+default_status_for_new: candidate

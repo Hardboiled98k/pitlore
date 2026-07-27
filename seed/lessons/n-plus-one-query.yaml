@@ -1,0 +1,34 @@
+id: n-plus-one-query
+version: 0.1.0
+title: "N+1 database queries in loops"
+languages:
+  - javascript
+  - typescript
+  - python
+  - go
+ecosystems:
+  []
+category: performance
+symptom: "Latency explodes with list size"
+root_cause: "Query inside loop instead of batch/join"
+forbid_pattern_abstract: "Awaiting a DB call inside map/forEach over parent rows without batching"
+safe_pattern_abstract: "Batch IDs, join, or DataLoader-style caching"
+scope:
+  paths: []
+severity: warn
+confidence: 0.8
+sources:
+  count: 1
+  references: []
+enforcement:
+  test_idea: "Assert query count bounded for N=100 fixtures"
+  detector_ref: null
+  patterns:
+    - "for\\s*\\([^)]+\\)\\s*\\{[\\s\\S]{0,120}await\\s+\\w+\\.(find|query|get)"
+tags:
+  - db
+  - performance
+status: approved
+visibility: public
+created_at: "2026-07-15T00:00:00.000Z"
+updated_at: "2026-07-15T00:00:00.000Z"

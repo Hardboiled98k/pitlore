@@ -1,0 +1,35 @@
+id: money-float
+version: 0.1.0
+title: "Money computed with floating point"
+languages:
+  - javascript
+  - typescript
+  - python
+  - go
+ecosystems:
+  []
+category: data
+symptom: "Rounding errors in currency totals"
+root_cause: "IEEE floats cannot represent cents exactly"
+forbid_pattern_abstract: "Using float/double for money math"
+safe_pattern_abstract: "Integer minor units or decimal library"
+scope:
+  paths: []
+severity: block
+confidence: 0.9
+sources:
+  count: 1
+  references: []
+enforcement:
+  test_idea: "Assert 0.1+0.2 style money paths use integers"
+  detector_ref: null
+  patterns:
+    - "price\\s*\\*\\s*0\\.\\d+"
+    - "amount\\s*\\+\\s*\\d+\\.\\d+"
+tags:
+  - money
+  - data
+status: approved
+visibility: public
+created_at: "2026-07-15T00:00:00.000Z"
+updated_at: "2026-07-15T00:00:00.000Z"

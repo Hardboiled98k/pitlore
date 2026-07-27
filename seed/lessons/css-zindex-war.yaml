@@ -1,0 +1,33 @@
+id: css-zindex-war
+version: 0.1.0
+title: "z-index arms race without stacking context plan"
+languages:
+  - css
+  - typescript
+ecosystems:
+  - react
+category: ui
+symptom: "Modals under dropdowns; unmaintainable z-index values"
+root_cause: "Magic z-index numbers without design tokens/layers"
+forbid_pattern_abstract: "Ad-hoc z-index: 9999 style escalation"
+safe_pattern_abstract: "Layer tokens (dropdown < modal < toast) in one place"
+scope:
+  paths: []
+severity: info
+confidence: 0.6
+sources:
+  count: 1
+  references: []
+enforcement:
+  test_idea: "Design token lint for z-index scale"
+  detector_ref: null
+  patterns:
+    - "z-index\\s*:\\s*9999"
+    - "zIndex:\\s*9999"
+tags:
+  - css
+  - ui
+status: approved
+visibility: public
+created_at: "2026-07-15T00:00:00.000Z"
+updated_at: "2026-07-15T00:00:00.000Z"

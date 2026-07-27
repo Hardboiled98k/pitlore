@@ -1,0 +1,6 @@
+name: pitlore/engineering-quality
+description: Public cross-language correctness and performance Lessons maintained by PitLore.
+visibility: public
+version: 0.1.0
+dependencies: {}
+default_status_for_new: candidate

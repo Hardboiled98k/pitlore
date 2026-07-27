@@ -1,0 +1,5 @@
+name: pitlore/tenant-isolation-demo
+description: Private repository lesson for enforcing tenant-scoped database queries.
+visibility: private
+version: 0.1.0
+default_status_for_new: candidate

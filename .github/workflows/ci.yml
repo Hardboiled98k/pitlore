@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Audit production dependencies
+        if: runner.os == 'Linux'
+        run: npm run audit:prod
+      - name: Audit full build dependency tree (high and critical)
+        if: runner.os == 'Linux'
+        run: npm run audit:build
+      # Windows process startup is materially slower for the CLI-heavy suites.
+      # Bound worker contention there instead of weakening assertions, adding
+      # retries, or raising the repository-wide test timeout.
+      - name: Test (Windows, bounded workers)
+        if: runner.os == 'Windows'
+        run: npm test -- --maxWorkers=1
+      - name: Test
+        if: runner.os != 'Windows'
+        run: npm test
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm run demo:tenant
+      - run: npm run test:package
+
+  self-host:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm run test:self-host

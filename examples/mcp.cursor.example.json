@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "pitlore": {
+      "command": "node",
+      "args": ["REPLACE_WITH_ABSOLUTE_PATH/dist/cli.js", "serve"],
+      "env": {
+        "PITLORE_LORE": "REPLACE_WITH_ABSOLUTE_PATH/seed"
+      }
+    }
+  }
+}

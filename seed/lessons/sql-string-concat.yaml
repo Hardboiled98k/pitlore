@@ -1,0 +1,49 @@
+id: sql-string-concat
+version: 0.2.0
+title: "SQL built by string concatenation"
+languages:
+  - javascript
+  - typescript
+  - python
+  - go
+ecosystems:
+  []
+category: security
+symptom: "SQL injection"
+root_cause: "Untrusted input interpolated into SQL strings"
+forbid_pattern_abstract: "Building SQL with string concat or template literals including user input"
+safe_pattern_abstract: "Parameterized queries / bound parameters only"
+scope:
+  paths: []
+severity: block
+confidence: 0.95
+sources:
+  count: 2
+  references:
+    - "0.1.0 pattern spanned whole files ((SELECT|...)[\\s\\S]*(concat)), producing 3 recorded false positives on fixed-SQL/whitelisted-fragment files; 0.2.0 scopes matching to a single string literal in a value position"
+    - "refinement verified: 3 previously flagged production files clean, demo bad fixture still detected, bad/good fixture matrix passes"
+enforcement:
+  test_idea: "SAST rule or integration test with injection payload"
+  detector_ref: null
+  patterns:
+    - '`[^`]*\b(SELECT|INSERT|UPDATE|DELETE)\b[^`]*''\$\{'
+    - '`[^`]*\b(SELECT|INSERT|UPDATE|DELETE)\b[^`]*[=(]\s*\$\{'
+    - '["''][^"''\n]*\b(SELECT|INSERT|UPDATE|DELETE)\b[^"''\n]*["'']\s*\+\s*[A-Za-z_$]'
+    - 'execute\([f"''].*%s'
+  fixtures:
+    bad:
+      - "fixtures/sql-string-concat/bad-quoted-interpolation.ts"
+      - "fixtures/sql-string-concat/bad-value-interpolation.ts"
+      - "fixtures/sql-string-concat/bad-string-concat.ts"
+      - "fixtures/sql-string-concat/bad-python-format.py"
+    good:
+      - "fixtures/sql-string-concat/good-parameterized.ts"
+      - "fixtures/sql-string-concat/good-whitelisted-fragment.ts"
+      - "fixtures/sql-string-concat/good-constant-concat.ts"
+tags:
+  - security
+  - sql
+status: approved
+visibility: public
+created_at: "2026-07-15T00:00:00.000Z"
+updated_at: "2026-07-18T18:50:00.000Z"

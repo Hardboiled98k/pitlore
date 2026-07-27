@@ -1,0 +1,32 @@
+id: node-path-traversal
+version: 0.1.0
+title: "Unsanitized path join with user input"
+languages:
+  - javascript
+  - typescript
+ecosystems:
+  - node
+category: security
+symptom: "Attacker reads files outside intended directory via ../"
+root_cause: "path.join(base, userInput) without resolving and checking prefix"
+forbid_pattern_abstract: "Joining user-controlled segments into filesystem paths without containment checks"
+safe_pattern_abstract: "path.resolve + verify startsWith(base + sep); prefer allowlists"
+scope:
+  paths: []
+severity: block
+confidence: 0.9
+sources:
+  count: 1
+  references: []
+enforcement:
+  test_idea: "Attempt ../etc/passwd style input and expect rejection"
+  detector_ref: null
+  patterns:
+    - "path\\.join\\s*\\([^)]*req\\.(params|query|body)"
+tags:
+  - security
+  - fs
+status: approved
+visibility: public
+created_at: "2026-07-15T00:00:00.000Z"
+updated_at: "2026-07-15T00:00:00.000Z"

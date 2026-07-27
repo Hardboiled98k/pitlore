@@ -1,0 +1,90 @@
+{
+  "name": "pitlore",
+  "version": "0.1.0",
+  "description": "Executable pit lore for coding agents — lessons from past bugs, retrieved and enforced at write time.",
+  "homepage": "https://github.com/Hardboiled98k/pitlore#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hardboiled98k/pitlore.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Hardboiled98k/pitlore/issues"
+  },
+  "type": "module",
+  "bin": {
+    "pitlore": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "seed",
+    "packs",
+    "migrations",
+    "web",
+    "demo",
+    "docs",
+    "THIRD_PARTY_NOTICES.md",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc && node scripts/bundle-mcp-runtime.mjs",
+    "audit:prod": "npm audit --omit=dev --registry=https://registry.npmjs.org",
+    "audit:build": "npm audit --audit-level=high --registry=https://registry.npmjs.org",
+    "predemo:tenant": "npm run build",
+    "demo:tenant": "node scripts/tenant-demo-smoke.mjs",
+    "dev": "tsx src/cli.ts",
+    "pitlore": "tsx src/cli.ts",
+    "test": "vitest run",
+    "test:package": "node scripts/package-smoke.mjs",
+    "test:self-host": "bash scripts/self-host-smoke.sh",
+    "test:watch": "vitest",
+    "registry:serve": "tsx src/cli.ts registry serve",
+    "typecheck": "tsc --noEmit",
+    "verify": "npm test && npm run typecheck && npm run build",
+    "prepack": "npm run build",
+    "seed:copy": "node --experimental-strip-types -e \"console.log('seed lives in ./seed')\""
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "coding-agent",
+    "mcp",
+    "lessons",
+    "anti-patterns",
+    "codex",
+    "pitlore"
+  ],
+  "license": "Apache-2.0",
+  "dependencies": {
+    "commander": "^13.1.0",
+    "fastify": "5.10.0",
+    "jose": "^6.2.3",
+    "js-yaml": "^4.1.0",
+    "minimatch": "^10.0.1",
+    "pg": "8.22.0",
+    "safe-regex2": "5.1.1",
+    "semver": "7.8.5",
+    "zod": "^3.25.28"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.13.10",
+    "@types/pg": "8.20.0",
+    "@types/semver": "7.7.1",
+    "esbuild": "0.28.1",
+    "pg-mem": "3.0.14",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.9"
+  }
+}

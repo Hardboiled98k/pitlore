@@ -1,0 +1,21 @@
+[mcp_servers.pitlore]
+command = "npm"
+args = ["run", "-s", "pitlore", "--", "serve"]
+startup_timeout_sec = 20
+required = true
+default_tools_approval_mode = "prompt"
+
+[mcp_servers.pitlore.tools.pitlore_retrieve]
+approval_mode = "approve"
+
+[mcp_servers.pitlore.tools.pitlore_check]
+approval_mode = "approve"
+
+[mcp_servers.pitlore.tools.pitlore_export_prompt]
+approval_mode = "approve"
+
+[mcp_servers.pitlore.tools.pitlore_remember]
+approval_mode = "prompt"
+
+[mcp_servers.pitlore.tools.pitlore_review]
+approval_mode = "prompt"

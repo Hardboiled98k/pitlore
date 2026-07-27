@@ -1,0 +1,6 @@
+name: pitlore/node-reliability
+description: Public Node.js and TypeScript reliability Lessons maintained by PitLore.
+visibility: public
+version: 0.1.0
+dependencies: {}
+default_status_for_new: candidate
