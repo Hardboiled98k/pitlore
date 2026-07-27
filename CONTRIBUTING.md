@@ -5,6 +5,8 @@ useful.
 
 ## Before you start
 
+- Follow the project [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md) in every
+  repository and community space.
 - Read [`docs/STATUS.md`](./docs/STATUS.md) for the current engineering
   baseline and unverified boundaries.
 - Read [`docs/DECISIONS.md`](./docs/DECISIONS.md) before changing trust,

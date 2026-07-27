@@ -629,6 +629,7 @@ try {
     !fs.existsSync(cliEntry) ||
     !fs.existsSync(path.join(installedRoot, "LICENSE")) ||
     !fs.existsSync(path.join(installedRoot, "CHANGELOG.md")) ||
+    !fs.existsSync(path.join(installedRoot, "CODE_OF_CONDUCT.md")) ||
     !fs.existsSync(path.join(installedRoot, "CONTRIBUTING.md")) ||
     !fs.existsSync(path.join(installedRoot, "SECURITY.md")) ||
     !fs.existsSync(path.join(installedRoot, "SUPPORT.md")) ||

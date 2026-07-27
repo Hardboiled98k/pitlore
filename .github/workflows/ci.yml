@@ -101,3 +101,32 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm run test:self-host
+
+  required:
+    name: CI required
+    if: always()
+    needs:
+      - verify
+      - package-artifact
+      - consumer-install
+      - self-host
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every CI gate
+        env:
+          PITLORE_CONSUMER_INSTALL_RESULT: ${{ needs.consumer-install.result }}
+          PITLORE_PACKAGE_ARTIFACT_RESULT: ${{ needs.package-artifact.result }}
+          PITLORE_SELF_HOST_RESULT: ${{ needs.self-host.result }}
+          PITLORE_VERIFY_RESULT: ${{ needs.verify.result }}
+        run: |
+          for PITLORE_RESULT in \
+            "$PITLORE_VERIFY_RESULT" \
+            "$PITLORE_PACKAGE_ARTIFACT_RESULT" \
+            "$PITLORE_CONSUMER_INSTALL_RESULT" \
+            "$PITLORE_SELF_HOST_RESULT"
+          do
+            if [ "$PITLORE_RESULT" != "success" ]; then
+              echo "A required CI dependency concluded: $PITLORE_RESULT" >&2
+              exit 1
+            fi
+          done

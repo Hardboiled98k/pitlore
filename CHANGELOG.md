@@ -5,6 +5,8 @@ for the distributed CLI package; Lesson and Pack schema versions have their own 
 
 ## Unreleased
 
+## [0.1.0] - 2026-07-27
+
 ### Changed
 
 - Require Node.js 22+; consumer CI is configured to exercise the Node.js 22 and
@@ -28,6 +30,8 @@ for the distributed CLI package; Lesson and Pack schema versions have their own 
   SHA-256-pinned tarball across Node.js 22/24 consumers before the protected publish job.
 - Public support guidance, structured bug/feature/question/false-positive issue forms, and
   default code plus Pack-specific pull-request checklists.
+- Contributor Covenant 2.1, repository ownership, weekly dependency-update
+  configuration, and one stable aggregate CI check for branch protection.
 
 ### Security
 
@@ -37,3 +41,5 @@ for the distributed CLI package; Lesson and Pack schema versions have their own 
   third-party notice bodies are pinned to reviewed SHA-256 values.
 - Public Pack verification is bounded and fail-closed for paths, symlinks, sizes,
   sensitive content, detector safety, signatures, and licenses.
+
+[0.1.0]: https://github.com/Hardboiled98k/pitlore/releases/tag/v0.1.0

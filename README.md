@@ -88,9 +88,17 @@ executes ordinary temporary `npm exec` and global-install CLI paths. The consume
 configured to run the same tarball on Ubuntu, macOS, and Windows; its public Actions result
 must be green before release. The artifact includes a bundled MCP stdio runtime and does
 not depend on the repository's `src/`, `tsx`, existing `node_modules`, or a separately
-installed MCP SDK. The package has not yet been published to the npm registry, so
-`npm install pitlore` and registry-backed `npx pitlore` are not available yet. PitLore is
-developed in public at
+installed MCP SDK. For a version that exists on the official npm registry, the supported
+registry install is:
+
+```bash
+npm install --global pitlore@0.1.0
+npx --yes pitlore@0.1.0 --version
+```
+
+If `npm view pitlore@0.1.0 version --registry=https://registry.npmjs.org` returns
+`E404`, use the public Git source install above; a public source commit does not imply an
+npm publication. PitLore is developed in public at
 [`Hardboiled98k/pitlore`](https://github.com/Hardboiled98k/pitlore). The source repository
 is public, while every local `.pitlore/` store, candidate, review, and evidence ledger
 remains private by default and is excluded from Git.
@@ -543,8 +551,9 @@ a production-hosted service or real external-provider operation.
 
 ## Contributing and security
 
-Contributions are welcome. Start with [`CONTRIBUTING.md`](./CONTRIBUTING.md), use
-[`SUPPORT.md`](./SUPPORT.md) for the right public help channel, and copy the
+Contributions are welcome. Follow [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md),
+start with [`CONTRIBUTING.md`](./CONTRIBUTING.md), use [`SUPPORT.md`](./SUPPORT.md)
+for the right public help channel, and copy the
 [Pack-specific pull-request checklist](https://github.com/Hardboiled98k/pitlore/blob/main/.github/PULL_REQUEST_TEMPLATE/pack.md)
 for public Lesson or Pack changes. Never submit a local `.pitlore/`, private
 Lessons/reviews/evidence, credentials, PII, customer data, or proprietary source.

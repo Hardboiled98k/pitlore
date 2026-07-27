@@ -34,7 +34,7 @@ GitHub URL 安装、锁定和重放成功，但这仍是维护者验收，不能
 | 完整验证         | 当前工作树 `npm run verify`：43 files / **376 tests**，typecheck 和 build 通过                                         |
 | 自托管           | 真 PostgreSQL 17：`001`–`008` 历史 release → `009` → CLI reindex/幂等复跑/runtime 拒绝，以及 fresh restore/restart 全通过 |
 | 分页性能探针     | synthetic 100k releases：PostgreSQL keyset 取 101 行 lookahead，index 扫描约 102 行，约 0.57 ms；只是工程证据           |
-| Demo / 发布包    | tenant Demo 通过；tarball、npm exec/全局安装、隔离 Git smoke 及无凭据公开 GitHub URL 安装/lock 重放均通过；约 0.52 MB / 2.53 MB / 242 files |
+| Demo / 发布包    | tenant Demo 通过；tarball、npm exec/全局安装、隔离 Git smoke 及无凭据公开 GitHub URL 安装/lock 重放均通过；约 0.53 MB / 2.73 MB / 243 files |
 | npm 发布自动化   | 仅手动 tag-ref workflow 已实现同一 artifact/SHA/六组合 consumer/OIDC 门禁；尚未运行，npm 包名、environment 与 trusted publisher 仍待维护者配置 |
 | 仓库保护         | live `main` 禁止 force-push/delete，但 required checks/reviews、admin enforcement、signatures 均未启用且 ruleset 为空；社区协作前仍需配置 |
 | 依赖审计         | production tree = 0；high/critical gate 通过；286 个 lock artifact 均为 npm 官方 registry；MCP bundle notice 正文有 SHA-256 门禁；audit 汇总的 2 个 dev-only Hono moderate 已在所装 1.19.17 修复，且 adapter 不进入 MCP bundle |
