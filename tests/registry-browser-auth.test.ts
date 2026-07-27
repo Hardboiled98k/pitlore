@@ -98,6 +98,13 @@ interface BrowserAppOverrides {
   readonly resolveActor?: BrowserIdentityActorResolver;
   readonly sessions?: BrowserSessionStore;
   readonly bearerActorResolver?: (token: string) => HumanActor | null;
+  readonly authRateLimit?:
+    | false
+    | {
+        readonly capacity?: number;
+        readonly refillPerSecond?: number;
+        readonly maxClients?: number;
+      };
 }
 
 function localActor(identity: VerifiedIdentity, role: HumanActor["role"] = "owner") {
@@ -120,6 +127,7 @@ function makeApp(
   const app = createRegistryServer({
     clock,
     publicRateLimit: false,
+    authRateLimit: overrides.authRateLimit,
     ...(overrides.bearerActorResolver
       ? {
           actorResolver: async (context) =>
@@ -186,6 +194,48 @@ async function beginLogin(app: FastifyInstance, orgId = ORG_ID) {
 }
 
 describe("Registry browser login (authorization code + PKCE)", () => {
+  it("rate-limits the login and callback routes before handler work", async () => {
+    const idp = makeMockIdp(() => new Response("{}", { status: 500 }));
+    const limit = { capacity: 1, refillPerSecond: 0.001, maxClients: 8 };
+    const loginApp = makeApp(idp, () => new Date(NOW.getTime()), {
+      authRateLimit: limit,
+    });
+
+    expect(
+      (
+        await loginApp.inject({
+          method: "GET",
+          url: `/auth/login?org_id=${ORG_ID}`,
+        })
+      ).statusCode,
+    ).toBe(302);
+    const limitedLogin = await loginApp.inject({
+      method: "GET",
+      url: `/auth/login?org_id=${ORG_ID}`,
+    });
+    expect(limitedLogin.statusCode).toBe(429);
+    expect(limitedLogin.headers["retry-after"]).toBe("1000");
+
+    const callbackApp = makeApp(idp, () => new Date(NOW.getTime()), {
+      authRateLimit: limit,
+    });
+    expect(
+      (
+        await callbackApp.inject({
+          method: "GET",
+          url: "/auth/callback",
+        })
+      ).statusCode,
+    ).toBe(400);
+    const limitedCallback = await callbackApp.inject({
+      method: "GET",
+      url: "/auth/callback",
+    });
+    expect(limitedCallback.statusCode).toBe(429);
+    expect(limitedCallback.headers["retry-after"]).toBe("1000");
+    expect(idp.requests).toEqual([]);
+  });
+
   it("completes login against a mock IdP with S256 PKCE and a bound session cookie", async () => {
     let idToken = "";
     const idp = makeMockIdp(() =>

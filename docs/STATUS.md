@@ -30,10 +30,10 @@ private archive，不属于公共 Git 历史。公开仓库本身不能冒充社
 | 当前工程基线     | clean public import；包含 public discovery facets v1、migration `009` 与完整开源文档                                   |
 | CI 见证          | 导入前同一源码已通过 Ubuntu、Windows、PostgreSQL self-host；公开 `main` 以实时 GitHub Actions 为准                      |
 | 工作树           | 公共历史从单个 GitHub noreply import commit 开始；旧开发历史只保留在 private archive                                   |
-| 完整验证         | 当前工作树 `npm run verify`：43 files / **373 tests**，typecheck 和 build 通过                                         |
+| 完整验证         | 当前工作树 `npm run verify`：43 files / **376 tests**，typecheck 和 build 通过                                         |
 | 自托管           | 真 PostgreSQL 17：`001`–`008` 历史 release → `009` → CLI reindex/幂等复跑/runtime 拒绝，以及 fresh restore/restart 全通过 |
 | 分页性能探针     | synthetic 100k releases：PostgreSQL keyset 取 101 行 lookahead，index 扫描约 102 行，约 0.57 ms；只是工程证据           |
-| Demo / 发布包    | tenant Demo 通过；package smoke 通过；当前 tarball dry-run = 510,064 bytes / 2,500,288 unpacked bytes / 233 files       |
+| Demo / 发布包    | tenant Demo 通过；package smoke 通过；当前 tarball dry-run ≈ 510 KB / 2.50 MB unpacked / 233 files                    |
 | 依赖审计         | production tree = 0；high/critical build gate 通过；MCP SDK → `@hono/node-server` 仍有 2 个 moderate，未 force/downgrade |
 | 本地 lore        | 当前 105 条：60 approved，45 candidate；29 条有 current advisory，16 条未 advisory review；均未由 agent 批准           |
 | Evidence current | `catalog_hash=637418aa…`；0 events；usefulness/precision/recall 均为 unknown (`null`)                                   |
@@ -176,7 +176,7 @@ npm run test:package           # passed; tarball MCP initialize/tools-list smoke
 npm run test:self-host         # passed; 008→009 reindex + fresh restore/restart on PostgreSQL 17
 npm run audit:prod             # 0 vulnerabilities
 npm run audit:build            # 2 moderate dev-only Hono findings; no high/critical
-npm pack --dry-run --json --ignore-scripts  # 510,064 bytes / 2,500,288 unpacked / 233 files
+npm pack --dry-run --json --ignore-scripts  # approximately 510 KB / 2.50 MB unpacked / 233 files
 docker compose config --quiet  # passed
 actionlint                     # passed
 shellcheck -e SC2016 ...       # passed

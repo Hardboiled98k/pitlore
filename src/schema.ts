@@ -325,8 +325,9 @@ export function validateEvidenceEvent(input: unknown): EvidenceEvent {
 
 /** Fields that must not appear in public lessons (soft check on string content). */
 const SENSITIVE_HINTS =
-  /(?:\bsk-[a-z0-9_-]{10,}\b|\bgh[pousr]_[a-z0-9]{20,}\b|\bgithub_pat_[a-z0-9_]{20,}\b|\bAKIA[0-9A-Z]{16}\b|\bapi[_-]?key["']?\s*[:=]|\bpassword["']?\s*[:=]|BEGIN (?:RSA |OPENSSH )?PRIVATE KEY|@internal\.|(?:corp\.local|[a-z0-9.-]+\.internal)\b|https?:\/\/(?:localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(?:1[6-9]|2\d|3[01])\.\d+\.\d+))/i;
-const EMAIL_HINT = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i;
+  /(?:\bsk-[a-z0-9_-]{10,256}|\bgh[pousr]_[a-z0-9]{20,256}|\bgithub_pat_[a-z0-9_]{20,256}|\bAKIA[0-9A-Z]{16}\b|\bapi[_-]?key["']?\s*[:=]|\bpassword["']?\s*[:=]|BEGIN (?:RSA |OPENSSH )?PRIVATE KEY|@internal\.|(?:corp\.local|[a-z0-9.-]{1,253}\.internal)\b|https?:\/\/(?:localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(?:1[6-9]|2\d|3[01])\.\d+\.\d+))/i;
+const EMAIL_HINT =
+  /[a-z0-9._%+-]{1,64}@[a-z0-9.-]{1,253}\.[a-z]{2,63}/i;
 const LOCAL_PATH_HINT = /(?:\/Users\/[^/\s"']+|\/home\/[^/\s"']+|[A-Z]:\\Users\\[^\\\s"']+)/i;
 const PROMPT_INJECTION_HINT =
   /\b(?:ignore|disregard)\s+(?:all\s+)?(?:previous|prior|system|developer)\s+instructions|\breveal\s+(?:the\s+)?system\s+prompt|\bsend\s+(?:secrets|credentials)\s+to\b/i;
